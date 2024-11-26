@@ -1,0 +1,15 @@
+@import "../node_modules/leaflet/dist/leaflet.css";
+
+/* Custom styles for the body */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a1a;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #f1c40f;
+}
+
+/* Adjust content to prevent overlap with fixed footer */
+.content {
+  padding-bottom: 60px;
+}
