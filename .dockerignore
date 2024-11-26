@@ -1,50 +1,35 @@
-# flyctl launch added from .gitignore
-# Compiled output
-dist
-tmp
-out-tsc
-bazel-out
-
-# Node
+# Exclude node_modules
 node_modules
-**\npm-debug.log
-**\yarn-error.log
 
-# IDEs and editors
-**\.idea
-**\.project
-**\.classpath
-**\.c9
-**\*.launch
-**\.settings
-**\*.sublime-workspace
+# Exclude Angular build output
+dist/
+build/
 
-# Visual Studio Code
-.vscode\*
-!**\.vscode\settings.json
-!**\.vscode\tasks.json
-!**\.vscode\launch.json
-!**\.vscode\extensions.json
-**\.history\*
+# Exclude Git files
+.git
+.gitignore
 
-# Miscellaneous
-.angular\cache
-**\.sass-cache
-connect.lock
-coverage
-libpeerconnection.log
-**\testem.log
-typings
+# Exclude Docker files
+Dockerfile
+docker-compose.yml
 
-# System files
-**\.DS_Store
-**\Thumbs.db
-backend\uploads
+# Exclude environment variables
+.env
 
-# flyctl launch added from .idea\.gitignore
-# Default ignored files
-.idea\shelf
-.idea\workspace.xml
-# Editor-based HTTP Client requests
-.idea\httpRequests
-fly.toml
+# Exclude OS-specific files
+.DS_Store
+Thumbs.db
+
+# Exclude editor-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Exclude logs
+logs/
+*.log
+
+# Exclude temporary files
+tmp/
+temp/
