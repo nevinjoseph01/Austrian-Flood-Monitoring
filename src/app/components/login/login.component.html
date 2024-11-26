@@ -1,9 +1,10 @@
-<div class="form-container">
-  <h2>Login</h2>
+<!-- src/app/components/login/login.component.html -->
+<div class="login-container">
+  <h2>Log In</h2>
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     <label>
       Username:
-      <input formControlName="username" />
+      <input formControlName="username" type="text" required />
     </label>
     <div class="error" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
       Username is required.
@@ -11,14 +12,20 @@
 
     <label>
       Password:
-      <input formControlName="password" type="password" />
+      <input formControlName="password" type="password" required />
     </label>
     <div class="error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
       Password is required.
     </div>
 
-    <button type="submit" [disabled]="loginForm.invalid">Login</button>
+    <button type="submit" [disabled]="loginForm.invalid || isLoading">Log In</button>
   </form>
-  <div *ngIf="message" class="message">{{ message }}</div>
-  <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+  <p>
+    Don't have an account?
+    <a routerLink="/register">Register here</a>
+  </p>
+  <div *ngIf="message" class="error">{{ message }}</div>
+
+  <!-- Display Spinner when loading -->
+  <app-spinner *ngIf="isLoading"></app-spinner>
 </div>

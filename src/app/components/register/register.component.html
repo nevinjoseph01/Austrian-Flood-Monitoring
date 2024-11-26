@@ -34,8 +34,14 @@
       </select>
     </label>
 
-    <button type="submit" [disabled]="registerForm.invalid">Register</button>
+    <!-- Enhanced Button with Classes -->
+    <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn btn-register">
+      Register
+    </button>
   </form>
   <div *ngIf="message" class="message">{{ message }}</div>
   <p>Already have an account? <a routerLink="/login">Login here</a></p>
+
+  <!-- Display Spinner when loading -->
+  <app-spinner *ngIf="isLoading"></app-spinner>
 </div>
