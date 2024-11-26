@@ -1,0 +1,51 @@
+.feed-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+  color: #f1c40f;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.report-card {
+  background-color: #333;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.report-card h3 {
+  margin-top: 0;
+}
+
+.meta {
+  font-size: 0.8em;
+  color: #b3b3b3;
+}
+
+.media-gallery {
+  margin: 15px 0;
+}
+
+.media-item {
+  max-width: 100%;
+  max-height: 400px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.pdf-link {
+  color: #f1c40f;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pdf-link:hover {
+  color: #e0e0e0;
+}

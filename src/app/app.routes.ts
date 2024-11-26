@@ -6,9 +6,13 @@ import { VerifyEmailComponent } from './components/verify-email/verify-email.com
 import { WelcomeComponent } from './components/welcome/welcome.component';
 import { FeedComponent } from './components/feed/feed.component';
 import { CreateReportComponent } from './components/create-report/create-report.component';
+import { LandingPageComponent } from './components/landing-page/landing-page.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  {
+    path: '',
+    component: LandingPageComponent,
+  },
   {
     path: 'register',
     component: RegisterComponent,
@@ -33,6 +37,8 @@ export const routes: Routes = [
     path: 'create-report',
     component: CreateReportComponent,
   },
-  // Redirect any unknown paths to login
-  { path: '**', redirectTo: '/login' },
+  {
+    path: '**',
+    redirectTo: '',
+  },
 ];

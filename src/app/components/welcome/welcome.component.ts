@@ -17,59 +17,8 @@ interface FloodAlert {
   selector: 'app-welcome',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="welcome-container">
-      <h2>Welcome, {{ username }}!</h2>
-      <div id="map"></div>
-    </div>
-  `,
-  styles: [
-    `
-      .welcome-container {
-        text-align: center;
-        margin-top: 50px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #f1c40f;
-      }
-
-      h2 {
-        font-size: 2.5em;
-        margin-bottom: 20px;
-      }
-
-      p {
-        font-size: 1.2em;
-      }
-
-      #map {
-        height: 600px;
-        margin: 20px auto;
-        max-width: 90%;
-      }
-
-      /* Legend styles */
-      .info.legend {
-        background-color: white;
-        padding: 6px 8px;
-        font: 14px/16px Arial, Helvetica, sans-serif;
-        border-radius: 5px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-      }
-
-      .info.legend i {
-        width: 18px;
-        height: 18px;
-        float: left;
-        margin-right: 8px;
-        opacity: 0.8;
-      }
-
-      .info.legend strong {
-        display: block;
-        margin-bottom: 5px;
-      }
-    `,
-  ],
+  templateUrl: 'welcome.component.html',
+  styleUrls: ['welcome.component.css'],
 })
 export class WelcomeComponent implements OnInit, AfterViewInit {
   username: string | null = '';
