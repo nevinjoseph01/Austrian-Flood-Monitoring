@@ -90,11 +90,20 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     // Load water-level data and add to map
     this.loadWaterLevelData().subscribe((data) => {
       this.waterLevelLayer = L.geoJSON(data, {
-        style: this.styleFeature.bind(this),
-        onEachFeature: this.onEachFeature.bind(this),
+        pointToLayer: (feature, latlng) => {
+          // Use a circleMarker instead of the default marker
+          return L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: this.getColor(feature.properties.waterLevel),
+            color: '#000', // Outline color
+            weight: 1,     // Outline width
+            opacity: 1,    // Outline opacity
+            fillOpacity: 0.8, // Fill opacity
+          });
+        },
+        onEachFeature: this.onEachFeature.bind(this), // Add popups or interactions
       }).addTo(this.map);
-
-      // Add layer control after layers are added
+    
       this.addLayerControl();
     });
 
@@ -116,29 +125,31 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private styleFeature(feature: any) {
     const waterLevel = feature.properties.waterLevel;
     const color = this.getColor(waterLevel);
-
+  
     return {
-      color: color,
+      fillColor: color,
       weight: 2,
-      opacity: 0.8,
+      opacity: 1,
+      color: 'black', // Border color
+      fillOpacity: 0.8,
     };
   }
 
   private getColor(waterLevel: number): string {
-    return waterLevel > 6
-      ? '#800026'
-      : waterLevel > 5
-        ? '#BD0026'
-        : waterLevel > 4
-          ? '#E31A1C'
-          : waterLevel > 3
-            ? '#FC4E2A'
-            : waterLevel > 2
-              ? '#FD8D3C'
-              : waterLevel > 1
-                ? '#FEB24C'
-                : '#FFEDA0';
-  }
+    return waterLevel > 1500
+        ? '#800026'
+        : waterLevel > 1200
+          ? '#BD0026'
+          : waterLevel > 900
+            ? '#E31A1C'
+            : waterLevel > 600
+              ? '#FC4E2A'
+              : waterLevel > 300
+                ? '#FD8D3C'
+                : waterLevel > 50
+                  ? '#FEB24C'
+                  : '#FFEDA0';
+    }
 
   private onEachFeature(feature: any, layer: L.Layer) {
     if (feature.properties && feature.properties.name) {
@@ -158,23 +169,23 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       // Add 'override' keyword to comply with TypeScript 4.3+
       override onAdd(map: L.Map) {
         const div = L.DomUtil.create('div', 'info legend');
-        const grades = [0, 1, 2, 3, 4, 5, 6];
+        const grades = [0, 50, 300, 600, 900, 1200, 1500];
 
         div.innerHTML += '<strong>Water Level (m)</strong><br>';
 
         // Define getColor function inside onAdd
         const getColor = (waterLevel: number): string => {
-          return waterLevel > 6
+          return waterLevel > 1500
             ? '#800026'
-            : waterLevel > 5
+            : waterLevel > 1200
               ? '#BD0026'
-              : waterLevel > 4
+              : waterLevel > 900
                 ? '#E31A1C'
-                : waterLevel > 3
+                : waterLevel > 600
                   ? '#FC4E2A'
-                  : waterLevel > 2
+                  : waterLevel > 300
                     ? '#FD8D3C'
-                    : waterLevel > 1
+                    : waterLevel > 50
                       ? '#FEB24C'
                       : '#FFEDA0';
         };
