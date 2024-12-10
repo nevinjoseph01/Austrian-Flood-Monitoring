@@ -5,6 +5,8 @@ import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { getWaterData } from '../../../assets/fetch';
+import { GeoJsonGeometryTypes } from 'geojson';
 
 // Define the FloodAlert interface with coords as a tuple
 interface FloodAlert {
@@ -76,7 +78,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     tiles.addTo(this.map);
 
     // Load water-level data and add to map
-    this.loadWaterLevelData().subscribe((data) => {
+    this.loadWaterLevelData().then((data: GeoJSON.FeatureCollection) => {
+      console.log(data)
       this.floodAlertLayer = L.layerGroup();
       this.waterLevelLayer = L.geoJSON(data, {
         pointToLayer: (feature, latlng) => {
@@ -103,9 +106,14 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     this.map.on('click', this.onMapClick.bind(this));
   }
 
-  private loadWaterLevelData(): Observable<any> {
-    // For demonstration, use a local or sample GeoJSON file
-    return this.http.get('assets/water-levels.json');
+  private loadWaterLevelData(): Promise<GeoJSON.FeatureCollection> {
+    var waterData = getWaterData();
+    // Fetches the water data every 10 minutes
+    setInterval(async function (){
+      var waterData = await getWaterData();
+      return waterData;
+    }, 10 * 60 * 1000);
+    return waterData;
   }
 
   /*private styleFeature(feature: any) {
