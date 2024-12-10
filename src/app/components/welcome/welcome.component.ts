@@ -152,57 +152,82 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   }
 
   private addLegend() {
-    // Define a class that extends L.Control
-    class LegendControl extends L.Control {
-      constructor(options?: L.ControlOptions) {
-        super(options);
-      }
-
-      // Add 'override' keyword to comply with TypeScript 4.3+
-      override onAdd(map: L.Map) {
-        const div = L.DomUtil.create('div', 'info legend');
-        const grades = [0, 50, 300, 600, 900, 1200, 1500];
-
-        div.innerHTML += '<strong>Water Level (m)</strong><br>';
-
-        // Define getColor function inside onAdd
-        const getColor = (waterLevel: number): string => {
-          return waterLevel > 1500
-            ? '#800026'
-            : waterLevel > 1200
-              ? '#BD0026'
-              : waterLevel > 900
-                ? '#E31A1C'
-                : waterLevel > 600
-                  ? '#FC4E2A'
-                  : waterLevel > 300
-                    ? '#FD8D3C'
-                    : waterLevel > 50
-                      ? '#FEB24C'
-                      : '#FFEDA0';
-        };
-
-        for (let i = 0; i < grades.length; i++) {
-          div.innerHTML +=
-            '<i style="background:' +
-            getColor(grades[i] + 1) +
-            '"></i> ' +
-            grades[i] +
-            (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-        }
-
-        return div;
-      }
-
-      // Add 'override' keyword to comply with TypeScript 4.3+
-      override onRemove(map: L.Map) {
-        // Optional cleanup code here
-      }
+  // Define a class that extends L.Control for Water Level legend
+  class LegendControl extends L.Control {
+    constructor(options?: L.ControlOptions) {
+      super(options);
     }
 
-    const legend = new LegendControl({ position: 'bottomright' });
-    legend.addTo(this.map);
+    override onAdd(map: L.Map) {
+      const div = L.DomUtil.create('div', 'info legend');
+      const grades = [0, 50, 300, 600, 900, 1200, 1500];
+
+      div.innerHTML += '<strong>Water Level (m)</strong><br>';
+
+      // Define getColor function inside onAdd
+      const getColor = (waterLevel: number): string => {
+        return waterLevel > 1500
+          ? '#800026'
+          : waterLevel > 1200
+          ? '#BD0026'
+          : waterLevel > 900
+          ? '#E31A1C'
+          : waterLevel > 600
+          ? '#FC4E2A'
+          : waterLevel > 300
+          ? '#FD8D3C'
+          : waterLevel > 50
+          ? '#FEB24C'
+          : '#FFEDA0';
+      };
+
+      for (let i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+          '<i style="background:' +
+          getColor(grades[i] + 1) +
+          '"></i> ' +
+          grades[i] +
+          (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+      }
+
+      return div;
+    }
+
+    override onRemove(map: L.Map) {
+      // Optional cleanup code here
+    }
   }
+
+  // Define a class for the Flood Alerts legend
+  class FloodAlertLegendControl extends L.Control {
+    constructor(options?: L.ControlOptions) {
+      super(options);
+    }
+
+    override onAdd(map: L.Map) {
+      const div = L.DomUtil.create('div', 'info legend flood-alert-legend');
+      div.innerHTML += '<strong>Flood Alerts</strong><br>';
+      div.innerHTML +=
+        '<i style="background: #FF0000"></i> High Alert<br>' +
+        '<i style="background: #FFA500"></i> Medium Alert<br>' +
+        '<i style="background: #FFFF00"></i> Low Alert<br>';
+      return div;
+    }
+
+    override onRemove(map: L.Map) {
+      // Optional cleanup code here
+    }
+  }
+
+  // Add the Water Level legend to the bottom right
+  const waterLevelLegend = new LegendControl({ position: 'bottomright' });
+  waterLevelLegend.addTo(this.map);
+
+  // Add the Flood Alerts legend to the top right
+  const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomright' });
+  floodAlertLegend.addTo(this.map);
+}
+
 
   private createFloodAlertObject(feature: any) {
     const riskCode = feature.properties.riskLevel.toString();

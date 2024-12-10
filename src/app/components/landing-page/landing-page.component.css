@@ -1,10 +1,9 @@
-/* src/app/components/landing-page/landing-page.component.css */
 .landing-page-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #1a1a1a;
+  background: linear-gradient(135deg, #1a1a1a, #2c3e50);
   color: #f1c40f;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -14,28 +13,35 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  background-color: #000000;
+  background-color: rgba(0, 0, 0, 0.8);
   padding: 40px;
   border-radius: 15px;
   max-width: 900px;
   width: 90%;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 1s ease-in-out;
 }
 
 .text-section {
   flex: 1;
   padding: 20px;
+  color: #f9f9f9;
 }
 
 .text-section h1 {
-  font-size: 2.5em;
+  font-size: 3em;
   margin-bottom: 20px;
+  background: linear-gradient(to right, #f1c40f, #d4ac0d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGlow 1.5s ease-in-out infinite alternate;
 }
 
 .text-section p {
-  font-size: 1.2em;
-  line-height: 1.6;
+  font-size: 1.3em;
+  line-height: 1.8;
   margin-bottom: 30px;
+  color: #f1f1f1;
 }
 
 .action-buttons {
@@ -45,7 +51,7 @@
 
 .btn {
   padding: 15px 30px;
-  font-size: 1.1em;
+  font-size: 1.2em;
   font-weight: bold;
   border: 2px solid #f1c40f;
   border-radius: 50px;
@@ -54,25 +60,24 @@
   color: #1a1a1a;
   background-color: #f1c40f;
   transition: all 0.3s ease;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
 }
 
 .btn:hover {
   background-color: #d4ac0d;
-  transform: translateY(-3px);
-  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.3);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
 }
 
 .register-btn {
-  background-color: #333;
+  background-color: transparent;
   border-color: #f1c40f;
   color: #f1c40f;
 }
 
 .register-btn:hover {
-  background-color: #444;
-  transform: translateY(-3px);
-  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.3);
+  background-color: #f1c40f;
+  color: #1a1a1a;
 }
 
 .image-section {
@@ -87,5 +92,58 @@
   max-width: 100%;
   max-height: 300px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  animation: zoomIn 1s ease-in-out;
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 0 0 10px #f1c40f, 0 0 20px #d4ac0d, 0 0 30px #f1c40f;
+  }
+  to {
+    text-shadow: 0 0 20px #f1c40f, 0 0 30px #d4ac0d, 0 0 40px #f1c40f;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-box {
+    flex-direction: column;
+    padding: 30px;
+  }
+
+  .text-section h1 {
+    font-size: 2.2em;
+  }
+
+  .text-section p {
+    font-size: 1.1em;
+  }
+
+  .image-section img {
+    max-height: 250px;
+  }
 }

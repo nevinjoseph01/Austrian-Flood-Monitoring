@@ -1,51 +1,74 @@
 .feed-container {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #1a1a1a;
-  border-radius: 10px;
-  color: #f1c40f;
+  padding: 40px;
+  max-width: 840px;
+  margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #f4f4f4;
 }
 
 h2 {
   text-align: center;
-  margin-bottom: 30px;
-}
-
-.report-card {
-  background-color: #333;
-  padding: 20px;
-  border-radius: 8px;
+  color: #f1c40f;
   margin-bottom: 20px;
 }
 
-.report-card h3 {
-  margin-top: 0;
+.report-card {
+  display: flex;
+  flex-direction: column;
+  background-color: #2a2a2a;
+  padding: 40px;
+  border-radius: 20px;
+  margin-bottom: 40px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: 2px solid #e2c64a;
 }
 
-.meta {
-  font-size: 0.8em;
-  color: #b3b3b3;
+.report-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
-.media-gallery {
-  margin: 15px 0;
+.report-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.media-item {
-  max-width: 100%;
-  max-height: 400px;
-  margin-bottom: 10px;
-  display: block;
+.text-content {
+  flex: 1;
 }
 
-.pdf-link {
+.text-content h3 {
+  margin: 0 0 10px;
   color: #f1c40f;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
-.pdf-link:hover {
-  color: #e0e0e0;
+.text-content p {
+  margin: 5px 0;
+  font-size: 0.9em;
+  color: #ddd;
+}
+
+.text-content .meta {
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+.media-preview {
+  margin-left: 20px;
+}
+
+.media-preview img {
+  max-width: 150px;
+  max-height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid #f1c40f;
+}
+
+.no-reports {
+  text-align: center;
+  font-size: 1.2em;
+  color: #aaa;
 }
