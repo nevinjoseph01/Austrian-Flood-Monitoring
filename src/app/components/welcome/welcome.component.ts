@@ -28,19 +28,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private floodAlertLayer!: L.LayerGroup<any>;
 
   // Define flood alerts with coords as tuples
-  private floodAlerts: FloodAlert[] = [
-    {
-      name: 'Vienna',
-      coords: [48.2082, 16.3738],
-      level: 'High',
-    },
-    {
-      name: 'Graz',
-      coords: [47.0707, 15.4395],
-      level: 'Medium',
-    },
-    // Add more locations as needed
-  ];
+  private floodAlerts: FloodAlert[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -89,26 +77,24 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
 
     // Load water-level data and add to map
     this.loadWaterLevelData().subscribe((data) => {
+      this.floodAlertLayer = L.layerGroup();
       this.waterLevelLayer = L.geoJSON(data, {
         pointToLayer: (feature, latlng) => {
-          // Use a circleMarker instead of the default marker
           return L.circleMarker(latlng, {
             radius: 8,
             fillColor: this.getColor(feature.properties.waterLevel),
-            color: '#000', // Outline color
-            weight: 1,     // Outline width
-            opacity: 1,    // Outline opacity
-            fillOpacity: 0.8, // Fill opacity
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
           });
         },
-        onEachFeature: this.onEachFeature.bind(this), // Add popups or interactions
+        onEachFeature: this.onEachFeature.bind(this),
       }).addTo(this.map);
-    
-      this.addLayerControl();
-    });
 
-    // Add flood alert markers
-    this.addFloodAlertMarkers();
+      this.addLayerControl();
+      this.addFloodAlerts();
+    });
 
     // Add scale control
     L.control.scale().addTo(this.map);
@@ -122,7 +108,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     return this.http.get('assets/water-levels.json');
   }
 
-  private styleFeature(feature: any) {
+  /*private styleFeature(feature: any) {
     const waterLevel = feature.properties.waterLevel;
     const color = this.getColor(waterLevel);
   
@@ -133,28 +119,34 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       color: 'black', // Border color
       fillOpacity: 0.8,
     };
-  }
+  }*/
 
   private getColor(waterLevel: number): string {
     return waterLevel > 1500
-        ? '#800026'
+        ? '#062C67'
         : waterLevel > 1200
-          ? '#BD0026'
+          ? '#1B4F8A'
           : waterLevel > 900
-            ? '#E31A1C'
+            ? '#3473A6'
             : waterLevel > 600
-              ? '#FC4E2A'
+              ? '#5A94C3'
               : waterLevel > 300
-                ? '#FD8D3C'
+                ? '#86B4D4'
                 : waterLevel > 50
-                  ? '#FEB24C'
-                  : '#FFEDA0';
+                  ? '#ABCDE5'
+                  : '#D3E7F8';
     }
 
   private onEachFeature(feature: any, layer: L.Layer) {
     if (feature.properties && feature.properties.name) {
+      this.floodAlerts.push(this.createFloodAlertObject(feature));
       layer.bindPopup(
-        `<strong>${feature.properties.name}</strong><br>Water Level: ${feature.properties.waterLevel}m`
+        `<strong>${feature.properties.name}</strong><br>
+        Water Level: ${feature.properties.waterLevel}m<br>
+        Closest body of water: ${feature.properties.area}<br>
+        Last available data: ${feature.properties.timeStamp}<br>
+        More details <a href = '${feature.properties.detailsLink}'>here</a><br>
+        `
       );
     }
   }
@@ -212,36 +204,83 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     legend.addTo(this.map);
   }
 
-  private addFloodAlertMarkers() {
-    this.floodAlertLayer = L.layerGroup();
+  private createFloodAlertObject(feature: any) {
+    const riskCode = feature.properties.riskLevel.toString();
 
-    this.floodAlerts.forEach((alert) => {
-      const marker = L.circleMarker(alert.coords, {
-        radius: 8,
-        fillColor: this.getAlertColor(alert.level),
-        color: '#000',
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.8,
-      });
+    if (riskCode.length !== 3) {
+      throw new Error('Invalid riskLevel code. It must be a 3-digit number.');
+    }
 
-      marker.bindPopup(`<strong>${alert.name}</strong><br>Flood Level: ${alert.level}`);
-      marker.addTo(this.floodAlertLayer);
-    });
-
-    this.floodAlertLayer.addTo(this.map);
+    const waterLevel = parseInt(riskCode.charAt(0));
+    const trend = parseInt(riskCode.charAt(1));
+    const freshness = parseInt(riskCode.charAt(2));
+  
+    let riskLevel = 'Normal';
+  
+    if (waterLevel === 1) {
+      riskLevel = 'Low';
+    } else if (waterLevel === 2) {
+      riskLevel = 'Medium';
+    } else if (waterLevel === 3) {
+      riskLevel = 'Medium';
+    } else if (waterLevel === 4 || waterLevel === 5 || waterLevel === 6) {
+      riskLevel = 'High';
+    } else if (waterLevel === 9) {
+      riskLevel = 'No Data';
+    }
+  
+    if (trend === 1) {
+      riskLevel = 'Rising';
+    } else if (trend === 2) {
+      riskLevel = 'Falling';
+    }
+  
+    if (freshness === 1) {
+      riskLevel = 'Stale'; // Data older than 24 hours
+    }
+  
+    const floodAlertObject: FloodAlert = {
+      name: feature.properties.name,
+      coords: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]], // For some reason this needs to be switched here...
+      level: riskLevel
+    };
+    return floodAlertObject;
   }
+
+  private addFloodAlerts() {
+    this.floodAlerts.forEach((alert) => {
+      if (alert.coords[0] && alert.coords[1]) {
+        const marker = L.circleMarker(alert.coords, {
+          radius: 8,
+          fillColor: this.getAlertColor(alert.level),
+          color: '#000',
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8,
+        });
+        marker.bindPopup(`<strong>${alert.name}</strong><br>Risk Level: ${alert.level}`);
+        marker.addTo(this.floodAlertLayer);
+      }
+    });
+    this.floodAlertLayer.addTo(this.map);
+  };
 
   private getAlertColor(level: string): string {
     switch (level) {
       case 'High':
-        return '#FF0000'; // Red
+        return '#FF0000';
       case 'Medium':
-        return '#FFA500'; // Orange
+        return '#FFA500';
       case 'Low':
-        return '#FFFF00'; // Yellow
+        return '#FFFF00';
+      case 'Rising':
+        return '#FF6347';
+      case 'Falling':
+        return '#32CD32';
+      case 'Stale':
+        return '#A9A9A9';
       default:
-        return '#00FF00'; // Green
+        return '#00FF00';
     }
   }
 
