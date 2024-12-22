@@ -1,18 +1,52 @@
+<!-- src/app/components/landing-page/landing-page.component.html -->
+
 <div class="landing-page-container">
-  <div class="content-box">
-    <div class="text-section">
-      <h1>Welcome to AFM</h1>
-      <p>
-        AFM is your reliable source for real-time flood alerts and data-driven insights.
-        Protecting communities through advanced technology and accurate forecasting. Log in now to access all our cool features!
-      </p>
-      <div class="action-buttons">
-        <a routerLink="/login" class="btn login-btn">Log In</a>
-        <a routerLink="/register" class="btn register-btn">Register</a>
+  <!-- MAP SECTION (1st) -->
+  <section #mapSection class="snap-section map-section">
+    <div id="landing-map" class="map-container"></div>
+
+    <!-- Subtle hint for new users: "Scroll or press ↓" -->
+    <div class="map-hint">
+      <p>Scroll or press ↓ to see more</p>
+    </div>
+
+    <!-- Button arrow to go down to the Welcome section -->
+    <button
+      class="nav-arrow down-arrow pulse-arrow"
+      (click)="scrollToWelcome()"
+      aria-label="Scroll to Welcome"
+      tabindex="0">
+      &#8595; 
+    </button>
+  </section>
+
+  <!-- WELCOME SECTION (2nd) -->
+  <section #welcomeSection class="snap-section welcome-section">
+    <!-- Button arrow to go up to the Map section -->
+    <button
+      class="nav-arrow up-arrow pulse-arrow"
+      (click)="scrollToMap()"
+      aria-label="Scroll to Map"
+      tabindex="0">
+      &#8593; 
+    </button>
+
+    <div class="content-box">
+      <div class="text-section">
+        <h1>Welcome to AFM</h1>
+        <p>
+          AFM is your reliable source for real-time flood alerts and data-driven insights.
+          Protecting communities through advanced technology and accurate forecasting.
+          Log in now to access all our cool features!
+        </p>
+        <div class="action-buttons">
+          <a routerLink="/login" class="btn login-btn">Log In</a>
+          <a routerLink="/register" class="btn register-btn">Register</a>
+        </div>
+      </div>
+      <div class="image-section">
+        <img src="../../../assets/landing-image2.png" alt="AFM Logo">
       </div>
     </div>
-    <div class="image-section">
-      <img src="../../../assets/landing-image2.png" alt="AFM Logo">
-    </div>
-  </div>
+  </section>
 </div>
