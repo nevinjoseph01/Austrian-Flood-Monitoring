@@ -5,6 +5,8 @@ import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { getWaterData } from '../../../assets/fetch';
+import { GeoJsonGeometryTypes } from 'geojson';
 
 // Define the FloodAlert interface with coords as a tuple
 interface FloodAlert {
@@ -28,19 +30,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private floodAlertLayer!: L.LayerGroup<any>;
 
   // Define flood alerts with coords as tuples
-  private floodAlerts: FloodAlert[] = [
-    {
-      name: 'Vienna',
-      coords: [48.2082, 16.3738],
-      level: 'High',
-    },
-    {
-      name: 'Graz',
-      coords: [47.0707, 15.4395],
-      level: 'Medium',
-    },
-    // Add more locations as needed
-  ];
+  private floodAlerts: FloodAlert[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -88,18 +78,26 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     tiles.addTo(this.map);
 
     // Load water-level data and add to map
-    this.loadWaterLevelData().subscribe((data) => {
+    this.loadWaterLevelData().then((data: GeoJSON.FeatureCollection) => {
+      console.log(data)
+      this.floodAlertLayer = L.layerGroup();
       this.waterLevelLayer = L.geoJSON(data, {
-        style: this.styleFeature.bind(this),
+        pointToLayer: (feature, latlng) => {
+          return L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: this.getColor(feature.properties.waterLevel),
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+          });
+        },
         onEachFeature: this.onEachFeature.bind(this),
       }).addTo(this.map);
 
-      // Add layer control after layers are added
       this.addLayerControl();
+      this.addFloodAlerts();
     });
-
-    // Add flood alert markers
-    this.addFloodAlertMarkers();
 
     // Add scale control
     L.control.scale().addTo(this.map);
@@ -108,129 +106,214 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     this.map.on('click', this.onMapClick.bind(this));
   }
 
-  private loadWaterLevelData(): Observable<any> {
-    // For demonstration, use a local or sample GeoJSON file
-    return this.http.get('assets/water-levels.json');
+  private loadWaterLevelData(): Promise<GeoJSON.FeatureCollection> {
+    var waterData = getWaterData();
+    // Fetches the water data every 10 minutes
+    setInterval(async function (){
+      var waterData = await getWaterData();
+      return waterData;
+    }, 10 * 60 * 1000);
+    return waterData;
   }
 
-  private styleFeature(feature: any) {
+  /*private styleFeature(feature: any) {
     const waterLevel = feature.properties.waterLevel;
     const color = this.getColor(waterLevel);
-
+  
     return {
-      color: color,
+      fillColor: color,
       weight: 2,
-      opacity: 0.8,
+      opacity: 1,
+      color: 'black', // Border color
+      fillOpacity: 0.8,
     };
-  }
+  }*/
 
   private getColor(waterLevel: number): string {
-    return waterLevel > 6
-      ? '#800026'
-      : waterLevel > 5
-        ? '#BD0026'
-        : waterLevel > 4
-          ? '#E31A1C'
-          : waterLevel > 3
-            ? '#FC4E2A'
-            : waterLevel > 2
-              ? '#FD8D3C'
-              : waterLevel > 1
-                ? '#FEB24C'
-                : '#FFEDA0';
-  }
+    return waterLevel > 1500
+        ? '#062C67'
+        : waterLevel > 1200
+          ? '#1B4F8A'
+          : waterLevel > 900
+            ? '#3473A6'
+            : waterLevel > 600
+              ? '#5A94C3'
+              : waterLevel > 300
+                ? '#86B4D4'
+                : waterLevel > 50
+                  ? '#ABCDE5'
+                  : '#D3E7F8';
+    }
 
   private onEachFeature(feature: any, layer: L.Layer) {
     if (feature.properties && feature.properties.name) {
+      this.floodAlerts.push(this.createFloodAlertObject(feature));
       layer.bindPopup(
-        `<strong>${feature.properties.name}</strong><br>Water Level: ${feature.properties.waterLevel}m`
+        `<strong>${feature.properties.name}</strong><br>
+        Water Level: ${feature.properties.waterLevel}m<br>
+        Closest body of water: ${feature.properties.area}<br>
+        Last available data: ${feature.properties.timeStamp}<br>
+        More details <a href = '${feature.properties.detailsLink}'>here</a><br>
+        `
       );
     }
   }
 
   private addLegend() {
-    // Define a class that extends L.Control
-    class LegendControl extends L.Control {
-      constructor(options?: L.ControlOptions) {
-        super(options);
-      }
-
-      // Add 'override' keyword to comply with TypeScript 4.3+
-      override onAdd(map: L.Map) {
-        const div = L.DomUtil.create('div', 'info legend');
-        const grades = [0, 1, 2, 3, 4, 5, 6];
-
-        div.innerHTML += '<strong>Water Level (m)</strong><br>';
-
-        // Define getColor function inside onAdd
-        const getColor = (waterLevel: number): string => {
-          return waterLevel > 6
-            ? '#800026'
-            : waterLevel > 5
-              ? '#BD0026'
-              : waterLevel > 4
-                ? '#E31A1C'
-                : waterLevel > 3
-                  ? '#FC4E2A'
-                  : waterLevel > 2
-                    ? '#FD8D3C'
-                    : waterLevel > 1
-                      ? '#FEB24C'
-                      : '#FFEDA0';
-        };
-
-        for (let i = 0; i < grades.length; i++) {
-          div.innerHTML +=
-            '<i style="background:' +
-            getColor(grades[i] + 1) +
-            '"></i> ' +
-            grades[i] +
-            (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-        }
-
-        return div;
-      }
-
-      // Add 'override' keyword to comply with TypeScript 4.3+
-      override onRemove(map: L.Map) {
-        // Optional cleanup code here
-      }
+  // Define a class that extends L.Control for Water Level legend
+  class LegendControl extends L.Control {
+    constructor(options?: L.ControlOptions) {
+      super(options);
     }
 
-    const legend = new LegendControl({ position: 'bottomright' });
-    legend.addTo(this.map);
+    override onAdd(map: L.Map) {
+      const div = L.DomUtil.create('div', 'info legend');
+      const grades = [0, 50, 300, 600, 900, 1200, 1500];
+
+      div.innerHTML += '<strong>Water Level (m)</strong><br>';
+
+      // Define getColor function inside onAdd
+      const getColor = (waterLevel: number): string => {
+        return waterLevel > 1500
+          ? '#800026'
+          : waterLevel > 1200
+          ? '#BD0026'
+          : waterLevel > 900
+          ? '#E31A1C'
+          : waterLevel > 600
+          ? '#FC4E2A'
+          : waterLevel > 300
+          ? '#FD8D3C'
+          : waterLevel > 50
+          ? '#FEB24C'
+          : '#FFEDA0';
+      };
+
+      for (let i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+          '<i style="background:' +
+          getColor(grades[i] + 1) +
+          '"></i> ' +
+          grades[i] +
+          (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+      }
+
+      return div;
+    }
+
+    override onRemove(map: L.Map) {
+      // Optional cleanup code here
+    }
   }
 
-  private addFloodAlertMarkers() {
-    this.floodAlertLayer = L.layerGroup();
+  // Define a class for the Flood Alerts legend
+  class FloodAlertLegendControl extends L.Control {
+    constructor(options?: L.ControlOptions) {
+      super(options);
+    }
 
+    override onAdd(map: L.Map) {
+      const div = L.DomUtil.create('div', 'info legend flood-alert-legend');
+      div.innerHTML += '<strong>Flood Alerts</strong><br>';
+      div.innerHTML +=
+        '<i style="background: #FF0000"></i> High Alert<br>' +
+        '<i style="background: #FFA500"></i> Medium Alert<br>' +
+        '<i style="background: #FFFF00"></i> Low Alert<br>';
+      return div;
+    }
+
+    override onRemove(map: L.Map) {
+      // Optional cleanup code here
+    }
+  }
+
+  // Add the Water Level legend to the bottom right
+  const waterLevelLegend = new LegendControl({ position: 'bottomright' });
+  waterLevelLegend.addTo(this.map);
+
+  // Add the Flood Alerts legend to the top right
+  const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomright' });
+  floodAlertLegend.addTo(this.map);
+}
+
+
+  private createFloodAlertObject(feature: any) {
+    const riskCode = feature.properties.riskLevel.toString();
+
+    if (riskCode.length !== 3) {
+      throw new Error('Invalid riskLevel code. It must be a 3-digit number.');
+    }
+
+    const waterLevel = parseInt(riskCode.charAt(0));
+    const trend = parseInt(riskCode.charAt(1));
+    const freshness = parseInt(riskCode.charAt(2));
+  
+    let riskLevel = 'Normal';
+  
+    if (waterLevel === 1) {
+      riskLevel = 'Low';
+    } else if (waterLevel === 2) {
+      riskLevel = 'Medium';
+    } else if (waterLevel === 3) {
+      riskLevel = 'Medium';
+    } else if (waterLevel === 4 || waterLevel === 5 || waterLevel === 6) {
+      riskLevel = 'High';
+    } else if (waterLevel === 9) {
+      riskLevel = 'No Data';
+    }
+  
+    if (trend === 1) {
+      riskLevel = 'Rising';
+    } else if (trend === 2) {
+      riskLevel = 'Falling';
+    }
+  
+    if (freshness === 1) {
+      riskLevel = 'Stale'; // Data older than 24 hours
+    }
+  
+    const floodAlertObject: FloodAlert = {
+      name: feature.properties.name,
+      coords: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]], // For some reason this needs to be switched here...
+      level: riskLevel
+    };
+    return floodAlertObject;
+  }
+
+  private addFloodAlerts() {
     this.floodAlerts.forEach((alert) => {
-      const marker = L.circleMarker(alert.coords, {
-        radius: 8,
-        fillColor: this.getAlertColor(alert.level),
-        color: '#000',
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.8,
-      });
-
-      marker.bindPopup(`<strong>${alert.name}</strong><br>Flood Level: ${alert.level}`);
-      marker.addTo(this.floodAlertLayer);
+      if (alert.coords[0] && alert.coords[1]) {
+        const marker = L.circleMarker(alert.coords, {
+          radius: 8,
+          fillColor: this.getAlertColor(alert.level),
+          color: '#000',
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8,
+        });
+        marker.bindPopup(`<strong>${alert.name}</strong><br>Risk Level: ${alert.level}`);
+        marker.addTo(this.floodAlertLayer);
+      }
     });
-
     this.floodAlertLayer.addTo(this.map);
-  }
+  };
 
   private getAlertColor(level: string): string {
     switch (level) {
       case 'High':
-        return '#FF0000'; // Red
+        return '#FF0000';
       case 'Medium':
-        return '#FFA500'; // Orange
+        return '#FFA500';
       case 'Low':
-        return '#FFFF00'; // Yellow
+        return '#FFFF00';
+      case 'Rising':
+        return '#FF6347';
+      case 'Falling':
+        return '#32CD32';
+      case 'Stale':
+        return '#A9A9A9';
       default:
-        return '#00FF00'; // Green
+        return '#00FF00';
     }
   }
 

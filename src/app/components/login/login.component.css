@@ -40,7 +40,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.error-message {
+.error {
   color: #e74c3c;
   margin-top: 10px;
 }

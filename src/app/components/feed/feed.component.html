@@ -1,47 +1,32 @@
 <div class="feed-container">
-  <h2>Your Feed</h2>
-  <div *ngIf="reports.length === 0">
-    <p>No reports to display.</p>
-  </div>
-  <div *ngFor="let report of reports" class="report-card">
-    <h3>{{ report.title }}</h3>
-    <p>{{ report.description }}</p>
+  <h2>Community Flood Reports</h2>
 
-    <!-- Display media if available -->
-    <div *ngIf="report.media && report.media.length > 0" class="media-gallery">
-      <div *ngFor="let mediaItem of report.media">
-        <ng-container [ngSwitch]="getMediaType(mediaItem.mimetype)">
-          <!-- Image -->
-          <img
-            *ngSwitchCase="'image'"
-            [src]="getMediaUrl(mediaItem.path)"
-            alt="Image"
-            class="media-item"
-          />
-          <!-- Video -->
-          <video
-            *ngSwitchCase="'video'"
-            [src]="getMediaUrl(mediaItem.path)"
-            controls
-            class="media-item"
-          ></video>
-          <!-- PDF -->
-          <a
-            *ngSwitchCase="'pdf'"
-            [href]="getMediaUrl(mediaItem.path)"
-            target="_blank"
-            class="media-item pdf-link"
-          >
-            View PDF
-          </a>
-          <!-- Unsupported -->
-          <p *ngSwitchDefault>Unsupported media type</p>
-        </ng-container>
+  <!-- Message for empty feed -->
+  <div *ngIf="reports.length === 0" class="no-reports">
+    <p>No reports to display. Be the first to report an incident!</p>
+  </div>
+
+  <!-- Iterate through each report -->
+  <div *ngFor="let report of reports" class="report-card">
+    <div class="report-content">
+      <!-- Text Content -->
+      <div class="text-content">
+        <h3>{{ report.title }}</h3>
+        <p>{{ report.description }}</p>
+        <p class="meta">
+          Posted by {{ report.createdBy.username }} on
+          {{ report.createdAt | date: 'medium' }}
+        </p>
+      </div>
+
+      <!-- Display media -->
+      <div *ngIf="report.media?.length > 0" class="media-preview">
+        <img
+          *ngIf="getMediaType(report.media[0]?.mimetype) === 'image'"
+          [src]="getMediaUrl(report.media[0]?.path)"
+          alt="Report Image"
+        />
       </div>
     </div>
-
-    <p class="meta">
-      Posted by {{ report.createdBy.username }} on {{ report.createdAt | date: 'medium' }}
-    </p>
   </div>
 </div>

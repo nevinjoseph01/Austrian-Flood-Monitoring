@@ -25,14 +25,14 @@
       Password is required and must be at least 6 characters.
     </div>
 
-    <label>
+    <!--<label> // Hid it for now :)
       Role:
       <select formControlName="role">
         <option value="normal">Normal</option>
         <option value="special">Special</option>
         <option value="moderator">Moderator</option>
       </select>
-    </label>
+    </label>-->
 
     <!-- Enhanced Button with Classes -->
     <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn btn-register">
