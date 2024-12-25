@@ -12,6 +12,9 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import * as L from 'leaflet';
 import { GeoJSON } from 'geojson';
+import * as turf from '@turf/turf';
+import { HttpClient } from '@angular/common/http';
+import proj4 from "proj4";
 
 // Sample fetch function for water data
 import { getWaterData } from '../../../assets/fetch';
@@ -33,8 +36,11 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
   @ViewChild('mapSection') mapSection!: ElementRef;
   @ViewChild('welcomeSection') welcomeSection!: ElementRef;
 
+  constructor(private http: HttpClient) {}
+
   private map!: L.Map;
   private waterLevelLayer!: L.GeoJSON<any>;
+  private histWaterLevelLayer!: L.GeoJSON<any>;
   private floodAlertLayer!: L.LayerGroup<any>;
   private floodAlerts: FloodAlert[] = [];
 
@@ -242,9 +248,109 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
       }
     }).addTo(this.map);
 
-    // Re-add flood alerts
-    this.addLayerControl();
+    // Load and display historical data (this one here probably takes a long time)
     this.updateFloodAlerts();
+
+    for(var i = 0; i < 77; i++)
+    {
+      /*this.setupHistWaterData(i);*/
+      if(i == 76)
+      {
+        this.addLayerControl();
+      }
+    }
+  }
+
+  // ------------- HISTORICAL WATER DATA ------------
+
+  private async setupHistWaterData(file_counter: number): Promise<void> {
+    try {
+      //this.loadHistWaterLevelData().subscribe((data) => {
+      if (this.histWaterLevelLayer) {
+        this.map.removeLayer(this.histWaterLevelLayer);
+      }
+
+      // Original GeoJSON object
+      this.http.get<GeoJSON.FeatureCollection>(`assets/HistWater_${file_counter}.geojson`).subscribe((data: GeoJSON.FeatureCollection) => {
+        const simplifiedData = turf.simplify(data, { tolerance: 0.01 });
+        this.processHistWaterData(simplifiedData);
+      });
+
+      
+
+    } catch (error) {
+      console.error('Error fetching historical water level data:', error);
+    }
+  }
+
+  // Reproject GeoJSON coordinates from EPSG:3035 to EPSG:4326
+  private processHistWaterData(data: GeoJSON.FeatureCollection) {
+    // Define EPSG:3035 projection
+    proj4.defs(
+      "EPSG:3035",
+      "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs"
+    );
+
+    const reprojectedGeoJSON: GeoJSON.FeatureCollection = {
+      ...data,
+      features: data.features.map((feature) => {
+        if (feature.geometry.type === "Polygon") {
+          // Reproject Polygon coordinates
+          const reprojectedCoordinates = feature.geometry.coordinates.map((ring) =>
+            ring.map((coord) => {
+              const [x, y] = proj4("EPSG:3035", "EPSG:4326", [coord[1], coord[0]]); // Swap before reprojection
+              return [x, y]; // Flip back after reprojection
+            })
+          );
+          return {
+            ...feature,
+            geometry: {
+              ...feature.geometry,
+              coordinates: reprojectedCoordinates,
+            },
+          };
+        } else if (feature.geometry.type === "MultiPolygon") {
+          // Reproject MultiPolygon coordinates
+          const reprojectedCoordinates = feature.geometry.coordinates.map((polygon) =>
+            polygon.map((ring) =>
+              ring.map((coord) => {
+                const [x, y] = proj4("EPSG:3035", "EPSG:4326", [coord[1], coord[0]]); // Swap before reprojection
+                return [y, x]; // Flip back after reprojection
+              })
+            )
+          );
+          return {
+            ...feature,
+            geometry: {
+              ...feature.geometry,
+              coordinates: reprojectedCoordinates,
+            },
+          };
+        }
+        // Return the feature unchanged if it's not a Polygon or MultiPolygon
+        return feature;
+      }) as GeoJSON.Feature<GeoJSON.Geometry, GeoJSON.GeoJsonProperties>[], // Explicitly cast to the correct type
+    };
+
+    // Add reprojected GeoJSON to the map
+    this.histWaterLevelLayer = L.geoJSON(reprojectedGeoJSON, {
+      style: (feature) => ({
+        color: "red", // Set the outline color
+        weight: 2, // Set the outline width
+        fillColor: "orange", // Set the fill color
+        fillOpacity: 0.5, // Set the fill transparency
+      }),
+      onEachFeature: (feature, layer) => {
+        // Bind a popup with properties
+        console.log(feature.properties.returnPeriod);
+        const { gml_id, localId, returnPeriod } = feature.properties;
+        layer.bindPopup(`
+          <strong>${gml_id}</strong><br>
+          Local ID: ${localId}<br>
+          Return Period: ${returnPeriod}
+        `);
+      },
+    }).addTo(this.map);
   }
 
   // ----------------- FLOOD ALERTS -----------------
