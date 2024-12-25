@@ -1,5 +1,5 @@
 .feed-container {
-  padding: 40px;
+  padding: 20px;
   max-width: 840px;
   margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,9 +16,9 @@ h2 {
   display: flex;
   flex-direction: column;
   background-color: #2a2a2a;
-  padding: 40px;
-  border-radius: 20px;
-  margin-bottom: 40px;
+  padding: 20px; 
+  border-radius: 10px; 
+  margin-bottom: 20px; 
   transition: transform 0.3s, box-shadow 0.3s;
   border: 2px solid #e2c64a;
 }
@@ -31,7 +31,8 @@ h2 {
 .report-content {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start; 
+  flex-wrap: wrap; 
 }
 
 .text-content {
@@ -55,7 +56,7 @@ h2 {
 }
 
 .media-preview {
-  margin-left: 20px;
+  margin-left: 20px; 
 }
 
 .media-preview img {
@@ -71,4 +72,38 @@ h2 {
   text-align: center;
   font-size: 1.2em;
   color: #aaa;
+}
+
+/* Responsive Design for Small Screens */
+@media (max-width: 768px) {
+  .feed-container {
+    padding: 10px; 
+  }
+
+  .report-card {
+    padding: 15px; 
+    border-radius: 5px; 
+  }
+
+  .report-content {
+    flex-direction: column;
+  }
+
+  .media-preview {
+    margin: 10px 0 0 0;
+    text-align: center; 
+  }
+
+  .media-preview img {
+    max-width: 100%; 
+    max-height: auto; 
+  }
+
+  .text-content h3 {
+    font-size: 1.2em; 
+  }
+
+  .text-content p {
+    font-size: 0.85em;
+  }
 }
