@@ -1,0 +1,35 @@
+<div class="feed-container">
+    <h2>Community Flood Tasks</h2>
+  
+    <!-- Message for empty feed -->
+    <div *ngIf="tasks.length === 0" class="no-tasks">
+      <p>No tasks to display. Be the first to create a task for an emergency!</p>
+    </div>
+  
+    <!-- Iterate through each task -->
+    <div *ngFor="let task of tasks" class="task-card">
+      <div class="task-content">
+        <!-- Text Content -->
+        <div class="text-content">
+          <h3>{{ task.title }}</h3>
+          <p>{{ task.description }}</p>
+          <p class="meta">
+            Current progress: {{ task.progress }}
+          </p>
+          <p class="meta">
+            Posted by {{ task.createdBy.username }} on
+            {{ task.createdAt | date: 'medium' }}
+          </p>
+        </div>
+  
+        <!-- Display media -->
+        <div *ngIf="task.media?.length > 0" class="media-preview">
+          <img
+            *ngIf="getMediaType(task.media[0]?.mimetype) === 'image'"
+            [src]="getMediaUrl(task.media[0]?.path)"
+            alt="Task Image"
+          />
+        </div>
+      </div>
+    </div>
+  </div>

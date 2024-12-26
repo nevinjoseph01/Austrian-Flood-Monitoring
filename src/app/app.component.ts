@@ -31,6 +31,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
           <div class="dropdown-menu" [class.show]="dropdownOpen">
             <a class="dropdown-item" [routerLink]="['/welcome', getUsername()]">Home</a>
             <a class="dropdown-item" routerLink="/feed">Feed</a>
+            <a class="dropdown-item" routerLink="/tasks">Tasks</a>
             <!-- Show "Create Post" only for authorized users -->
             <a
               *ngIf="canCreatePost()"
@@ -38,6 +39,14 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
               (click)="openCreatePostModal()"
             >
               Create Post
+            </a>
+            <!-- Show "Create Task" only for authorized users -->
+            <a
+              *ngIf="canCreateTask()"
+              class="dropdown-item"
+              (click)="openCreateTaskModal()"
+            >
+              Create Task
             </a>
             <a class="dropdown-item" (click)="logout()">Logout</a>
           </div>
@@ -47,7 +56,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
     <div class="content">
       <router-outlet></router-outlet>
     </div>
-    <!-- Include the modal template -->
+    <!-- Include the post modal template -->
     <div *ngIf="isCreatePostModalOpen" class="modal-overlay" (click)="closeCreatePostModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <h2>Create a Post</h2>
@@ -84,6 +93,55 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
           <div class="modal-actions">
             <button type="submit" [disabled]="createPostForm.invalid">Post</button>
             <button type="button" (click)="closeCreatePostModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Include the task modal template -->
+    <div *ngIf="isCreateTaskModalOpen" class="modal-overlay" (click)="closeCreateTaskModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Create a Task</h2>
+        <form [formGroup]="createTaskForm" (ngSubmit)="submitTask()">
+          <label>
+            Title:
+            <input formControlName="title" />
+          </label>
+          <div
+            class="error"
+            *ngIf="createTaskForm.get('title')?.invalid && createTaskForm.get('title')?.touched"
+          >
+            Title is required.
+          </div>
+          <label>
+            Description:
+            <textarea formControlName="description"></textarea>
+          </label>
+          <label>
+            Progress:
+            <select formControlName="progress">
+              <option value="Not done" selected>Not done</option>
+              <option value="In progress">In progress</option>
+              <option value="Done">Done</option>
+            </select>
+          </label>
+          <!-- Add file input for media attachments -->
+          <label>
+            Attach Media:
+            <input type="file" (change)="onFileSelected($event)" multiple />
+          </label>
+          <!-- Display selected files -->
+          <div class="file-list" *ngIf="selectedFiles.length > 0">
+            <p>Selected Files:</p>
+            <ul>
+              <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
+            </ul>
+          </div>
+          <div *ngIf="createTaskError" class="error">
+            {{ createTaskError }}
+          </div>
+          <div class="modal-actions">
+            <button type="submit" [disabled]="createTaskForm.invalid">Publish</button>
+            <button type="button" (click)="closeCreateTaskModal()">Cancel</button>
           </div>
         </form>
       </div>
@@ -243,6 +301,10 @@ export class AppComponent implements OnInit {
   createPostForm: FormGroup;
   createPostError: string = '';
 
+  isCreateTaskModalOpen = false;
+  createTaskForm: FormGroup;
+  createTaskError: string = '';
+
   // Add selectedFiles property to hold the selected files
   selectedFiles: File[] = [];
 
@@ -254,6 +316,12 @@ export class AppComponent implements OnInit {
     this.createPostForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
+    });
+
+    this.createTaskForm = this.fb.group({
+      title: ['', Validators.required],
+      description: [''],
+      progress: ['Not done'],
     });
   }
 
@@ -290,7 +358,12 @@ export class AppComponent implements OnInit {
   }
 
   canCreatePost(): boolean {
-    const role = this.apiService.getUserRole();
+    const role = this.apiService.getUserRole() || '';
+    return role === 'special' || role === 'moderator';
+  }
+
+  canCreateTask(): boolean {
+    const role = this.apiService.getUserRole() || '';
     return role === 'special' || role === 'moderator';
   }
 
@@ -301,8 +374,23 @@ export class AppComponent implements OnInit {
     this.selectedFiles = []; // Reset selected files when opening the modal
   }
 
+  openCreateTaskModal() {
+    this.isCreateTaskModalOpen = true;
+    this.createTaskForm.reset({
+      title: '',
+      description: '',
+      progress: 'Not done', // Default value preserved 😎
+    });
+    this.createTaskError = '';
+    this.selectedFiles = []; // Reset selected files when opening the modal
+  }
+
   closeCreatePostModal() {
     this.isCreatePostModalOpen = false;
+  }
+
+  closeCreateTaskModal() {
+    this.isCreateTaskModalOpen = false;
   }
 
   /**
@@ -357,6 +445,33 @@ export class AppComponent implements OnInit {
           console.error('Error creating report:', error);
           // Show error message
           this.createPostError = error.error.message || 'Failed to create post.';
+        }
+      );
+    }
+  }
+
+  submitTask() {
+    if (this.createTaskForm.valid) {
+      const formData = new FormData();
+      formData.append('title', this.createTaskForm.get('title')?.value);
+      formData.append('description', this.createTaskForm.get('description')?.value || '');
+      formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
+
+      // Append selected files
+      this.selectedFiles.forEach((file) => {
+        formData.append('media', file);
+      });
+
+      this.apiService.createTask(formData).subscribe(
+        (response) => {
+          this.closeCreateTaskModal();
+          // Optionally, refresh the feed or navigate
+          this.router.navigate(['/tasks']);
+        },
+        (error) => {
+          console.error('Error creating task:', error);
+          // Show error message
+          this.createPostError = error.error.message || 'Failed to create task.';
         }
       );
     }
