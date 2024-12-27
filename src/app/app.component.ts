@@ -10,6 +10,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { ApiService } from './api.service';
 import { filter } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-root',
@@ -87,6 +88,17 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
               <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
             </ul>
           </div>
+          <!-- Geolocation Selection -->
+          <label>
+            Select Location on Map:
+            <div id="coords-info"></div>
+            <div id="map"></div>
+            <input
+              type="hidden" 
+              formControlName="geolocation"
+              [value]="selectedCoordinates | json"
+            />
+          </label>
           <div *ngIf="createPostError" class="error">
             {{ createPostError }}
           </div>
@@ -291,15 +303,28 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
       .file-list li {
         margin-bottom: 5px;
       }
+
+      #map {
+        height: 150px;
+      }
+
+      #coords-info {
+      margin-top: 10px; 
+      color: #f1c40f; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
     `,
   ],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit 
+{
   dropdownOpen = false;
   hideNavButtons = false;
   isCreatePostModalOpen = false;
   createPostForm: FormGroup;
   createPostError: string = '';
+  private map!: L.Map;
+  selectedCoordinates: [number, number] = [0, 0];
 
   isCreateTaskModalOpen = false;
   createTaskForm: FormGroup;
@@ -316,6 +341,7 @@ export class AppComponent implements OnInit {
     this.createPostForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
+      geolocation: ['', Validators.required],
     });
 
     this.createTaskForm = this.fb.group({
@@ -325,19 +351,80 @@ export class AppComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit() 
+  {
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        const currentUrl = event.urlAfterRedirects;
-        if (currentUrl === '/login' || currentUrl === '/register') {
-          this.hideNavButtons = true;
-        } else {
-          this.hideNavButtons = false;
-        }
-        // Close dropdown when navigating
-        this.dropdownOpen = false;
+    .pipe(filter((event) => event instanceof NavigationEnd))
+    .subscribe((event: NavigationEnd) => {
+      const currentUrl = event.urlAfterRedirects;
+      if (currentUrl === '/login' || currentUrl === '/register') {
+        this.hideNavButtons = true;
+      } else {
+        this.hideNavButtons = false;
+      }
+      // Close dropdown when navigating
+      this.dropdownOpen = false;
+    });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.mapInit();
+    });
+  }
+
+  private mapInit() {
+    const austriaBounds = L.latLngBounds(
+      [46.372276, 9.530952],
+      [49.017784, 17.160776]
+    );
+        
+    this.map = L.map('map', {
+      center: [47.5162, 14.5501], // Center of Austria
+      zoom: 7,
+      minZoom: 6,
+      maxZoom: 12,
+      maxBounds: austriaBounds,
+      maxBoundsViscosity: 0.7,
+      zoomControl: false
+    });
+        
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    });
+    tiles.addTo(this.map);
+    
+    L.control.scale().addTo(this.map);
+    
+    let marker: L.Marker;
+    
+    // Handle map click
+    this.map.on('click', (e: any) => {
+      const { lat, lng } = e.latlng;
+
+      const triangleIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="
+        width: 0; height: 0; border-left: 
+        10px solid transparent; 
+        border-right: 10px solid transparent; 
+        border-top: 20px solid red;"></div>`,
+        iconAnchor: [10, 25],
       });
+
+      this.selectedCoordinates = [lat, lng];
+      const InfoBox = document.getElementById("coords-info");
+      if(InfoBox) {
+        InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[0]}, Lon: ${this.selectedCoordinates[1]}`;
+      }
+
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map);
+      }
+    });
   }
 
   isLoggedIn(): boolean {
@@ -372,6 +459,7 @@ export class AppComponent implements OnInit {
     this.createPostForm.reset();
     this.createPostError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
+    setTimeout(() => this.mapInit(), 0);
   }
 
   openCreateTaskModal() {
@@ -399,9 +487,11 @@ export class AppComponent implements OnInit {
    *
    * @param event - The file input change event.
    */
-  onFileSelected(event: Event) {
+  onFileSelected(event: Event) 
+  {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
+    if (input.files) 
+    {
       // Convert FileList to Array
       const files = Array.from(input.files);
       const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'application/pdf'];
@@ -424,11 +514,14 @@ export class AppComponent implements OnInit {
     }
   }
 
-  submitPost() {
-    if (this.createPostForm.valid) {
+  submitPost() 
+  {
+    if (this.createPostForm.valid) 
+    {
       const formData = new FormData();
       formData.append('title', this.createPostForm.get('title')?.value);
       formData.append('description', this.createPostForm.get('description')?.value || '');
+      formData.append('geolocation', this.createPostForm.get('geolocation')?.value || '');
 
       // Append selected files
       this.selectedFiles.forEach((file) => {
@@ -450,7 +543,8 @@ export class AppComponent implements OnInit {
     }
   }
 
-  submitTask() {
+  submitTask() 
+  {
     if (this.createTaskForm.valid) {
       const formData = new FormData();
       formData.append('title', this.createTaskForm.get('title')?.value);

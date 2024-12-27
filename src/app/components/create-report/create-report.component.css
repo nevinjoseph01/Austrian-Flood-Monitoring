@@ -60,3 +60,13 @@ button:disabled {
   background-color: #7f8c8d;
   cursor: not-allowed;
 }
+
+#map {
+  height: 150px;
+}
+
+#coords-info {
+margin-top: 10px; 
+color: #f1c40f; 
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
