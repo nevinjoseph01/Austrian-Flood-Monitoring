@@ -16,12 +16,16 @@ export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   message: string = '';
   isLoading: boolean = false; // Loading state
+  showPassword: boolean = false; // Password visibility state
 
   constructor(private fb: FormBuilder, private apiService: ApiService, private router: Router) {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: [
+                  '',
+                  [Validators.required,Validators.pattern('(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&].{8,}')]
+                ],
       role: ['normal', Validators.required],
     });
   }
@@ -51,5 +55,9 @@ export class RegisterComponent implements OnInit {
         }
       );
     }
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 }
