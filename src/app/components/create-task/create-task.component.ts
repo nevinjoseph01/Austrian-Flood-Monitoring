@@ -19,6 +19,7 @@ export class CreateTaskComponent {
     this.taskForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
+      assignedTo: [''],
     });
   }
 

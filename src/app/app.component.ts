@@ -11,6 +11,7 @@ import { ApiService } from './api.service';
 import { filter } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import * as L from 'leaflet';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -124,6 +125,20 @@ import * as L from 'leaflet';
           >
             Title is required.
           </div>
+          <label>
+            Assigned user:
+            <input class="assigned_to_box"
+            formControlName="assignedTo"
+            (focus)="onAssignedToFocus()" 
+            (blur)="onAssignedToBlur()" 
+            (input)="onAssignedToInput($event)" />
+            <div *ngIf="usernamelist.length === 0" id="no-usernames"></div>
+            <div *ngFor="let name of usernamelist" id="username-card">
+              <div class="username-content" (click)="onUsernameContentClick($event)">
+                <div>{{ name }}</div>
+              </div>
+            </div>
+          </label>
           <label>
             Description:
             <textarea formControlName="description"></textarea>
@@ -313,6 +328,30 @@ import * as L from 'leaflet';
       color: #f1c40f; 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       }
+
+      #username-card {
+      position: relative;
+      top: -3px;
+      background: #dddddd;
+      border: 3px solid black;
+      border-radius: 10px;
+      padding: 0px;
+      width: 200px;
+      height: 30px;
+      }
+
+      .username-content {
+      color: black;
+      padding-left: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid grey;
+      border-radius: 10px 10px 0px 0px;
+      }
+
+      .username-content:hover {
+      background: #aaaaaa;
+      cursor: pointer;
+      }
     `,
   ],
 })
@@ -329,6 +368,10 @@ export class AppComponent implements OnInit
   isCreateTaskModalOpen = false;
   createTaskForm: FormGroup;
   createTaskError: string = '';
+
+  isAssignedToFocused: boolean = false;
+  userlist: any = [];
+  usernamelist: any[] = [];
 
   // Add selectedFiles property to hold the selected files
   selectedFiles: File[] = [];
@@ -348,6 +391,7 @@ export class AppComponent implements OnInit
       title: ['', Validators.required],
       description: [''],
       progress: ['Not done'],
+      assignedTo: [''],
     });
   }
 
@@ -365,6 +409,8 @@ export class AppComponent implements OnInit
       // Close dropdown when navigating
       this.dropdownOpen = false;
     });
+
+    this.userlist = this.apiService.getUsers();
   }
 
   ngAfterViewInit(): void {
@@ -410,7 +456,7 @@ export class AppComponent implements OnInit
         10px solid transparent; 
         border-right: 10px solid transparent; 
         border-top: 20px solid red;"></div>`,
-        iconAnchor: [10, 25],
+        iconAnchor: [10, 25],   // Positioning the triangle so that the bottom point will be where the user clicks
       });
 
       this.selectedCoordinates = [lat, lng];
@@ -468,6 +514,7 @@ export class AppComponent implements OnInit
       title: '',
       description: '',
       progress: 'Not done', // Default value preserved 😎
+      assignedTo: '',
     });
     this.createTaskError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
@@ -550,6 +597,7 @@ export class AppComponent implements OnInit
       formData.append('title', this.createTaskForm.get('title')?.value);
       formData.append('description', this.createTaskForm.get('description')?.value || '');
       formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
+      formData.append('assignedTo', this.createTaskForm.get('assignedTo')?.value || '');
 
       // Append selected files
       this.selectedFiles.forEach((file) => {
@@ -568,6 +616,52 @@ export class AppComponent implements OnInit
           this.createPostError = error.error.message || 'Failed to create task.';
         }
       );
+    }
+  }
+
+  onAssignedToFocus(): void {
+    this.isAssignedToFocused = true;
+  }
+  
+  onAssignedToBlur(): void {
+    this.isAssignedToFocused = false;
+    setTimeout(() => {
+      this.usernamelist = [];
+    },250);
+    
+  }
+
+  onAssignedToInput(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+
+    if(this.isAssignedToFocused) {
+      const username = inputElement.value;
+      
+      const users: any[] = []
+      this.userlist.forEach((user: any) => {
+        if(user.indexOf(username) >= 0) {
+          users.push(user);
+        }
+      });
+
+      users.push('asd');  // This is just for testing purposes, once this is on the main branch, this needs to be deleted
+      this.usernamelist = users;
+    }
+    // Perform any additional logic with the new value
+  }
+
+  onUsernameContentClick(event: Event): void {
+    const usernameHolder = event.target as HTMLInputElement;
+    const name = usernameHolder.firstChild?.textContent;
+    const inputElement = document.querySelector('.assigned_to_box') as HTMLInputElement;
+    
+    if (inputElement) {
+      if(name) {
+        inputElement.value = name;
+      }
+      else {
+        inputElement.value = '';
+      }
     }
   }
 }

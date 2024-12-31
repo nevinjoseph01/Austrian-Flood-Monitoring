@@ -93,4 +93,8 @@ export class ApiService {
       headers: this.getAuthHeaders(),
     });
   }
+
+  getUsers(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users`);
+  }
 }
