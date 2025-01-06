@@ -6,10 +6,12 @@
   border-radius: 10px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #f1c40f;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); 
 }
 
 h2 {
   text-align: center;
+  font-size: 1.8em; 
 }
 
 label {
@@ -19,13 +21,15 @@ label {
 
 input,
 select {
-  width: 100%;
-  padding: 8px;
+  width: calc(100% - 16px); 
+  padding: 12px; 
+  margin-top: 5px;
   border: 1px solid #333;
   border-radius: 5px;
   background-color: #333;
   color: #f1c40f;
   font-size: 1em;
+  box-sizing: border-box; 
 }
 
 .error {
@@ -37,17 +41,24 @@ select {
 .message {
   margin-top: 10px;
   color: #e74c3c;
+  font-size: 0.95em; 
+  text-align: center; 
 }
 
 button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background-color: #f1c40f;
   color: #1a1a1a;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #d4ac0d; 
 }
 
 button:disabled {
@@ -67,4 +78,36 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 15px;
+    margin: 20px auto;
+    box-shadow: none; 
+  }
+
+  h2 {
+    font-size: 1.5em; 
+  }
+
+  input,
+  select {
+    padding: 10px; 
+    font-size: 0.9em; 
+  }
+
+  button {
+    padding: 10px;
+    font-size: 0.95em; 
+  }
+
+  .error {
+    font-size: 0.85em; 
+  }
+
+  .message {
+    font-size: 0.85em; 
+  }
 }

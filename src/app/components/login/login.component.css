@@ -6,6 +6,12 @@
   color: #f1c40f;
   border-radius: 10px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); 
+}
+
+h2 {
+  text-align: center;
+  font-size: 1.8em;
 }
 
 form label {
@@ -14,17 +20,19 @@ form label {
 }
 
 form input {
-  width: 100%;
-  padding: 10px;
+  width: calc(100% - 16px); 
+  padding: 12px; 
   margin-top: 5px;
   border-radius: 5px;
   border: 1px solid #333;
   background-color: #333;
   color: #f1c40f;
+  font-size: 1em;
+  box-sizing: border-box; 
 }
 
 button {
-  padding: 10px 20px;
+  padding: 12px 20px;
   font-size: 1em;
   border: none;
   border-radius: 5px;
@@ -33,16 +41,23 @@ button {
   cursor: pointer;
   margin-top: 10px;
   width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #d4ac0d; 
 }
 
 button:disabled {
-  background-color: #d4ac0d;
+  background-color: #7f8c8d;
   cursor: not-allowed;
 }
 
 .error {
   color: #e74c3c;
   margin-top: 10px;
+  font-size: 0.9em; 
+  text-align: center;
 }
 
 .spinner {
@@ -67,5 +82,31 @@ button:disabled {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 15px;
+    margin: 20px; 
+    box-shadow: none; 
+  }
+
+  h2 {
+    font-size: 1.5em; 
+  }
+
+  form input {
+    font-size: 0.9em; 
+  }
+
+  button {
+    padding: 10px;
+    font-size: 0.95em; 
+  }
+
+  .error {
+    font-size: 0.85em; 
   }
 }

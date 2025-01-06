@@ -9,6 +9,7 @@ import { CreateReportComponent } from './components/create-report/create-report.
 import { TasksComponent } from './components/tasks/tasks.component';
 import { CreateTaskComponent } from './components/create-task/create-task.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
+import { EditProfileComponent } from './components/edit-profile/edit-profile.component';
 
 export const routes: Routes = [
   {
@@ -46,6 +47,10 @@ export const routes: Routes = [
   {
     path: 'create-task',
     component: CreateTaskComponent,
+  },
+  {
+    path: 'edit-profile',
+    component: EditProfileComponent,
   },
   {
     path: '**',

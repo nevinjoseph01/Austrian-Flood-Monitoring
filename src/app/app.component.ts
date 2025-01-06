@@ -50,6 +50,7 @@ import { Observable } from 'rxjs';
             >
               Create Task
             </a>
+            <a class="dropdown-item" routerLink="/edit-profile">Edit Profile</a>
             <a class="dropdown-item" (click)="logout()">Logout</a>
           </div>
         </div>

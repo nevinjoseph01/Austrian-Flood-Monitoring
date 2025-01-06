@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { getWaterData } from '../../../assets/fetch';
 import { GeoJsonGeometryTypes } from 'geojson';
+import { FeedComponent } from '../feed/feed.component';
 
 // Define the FloodAlert interface with coords as a tuple
 interface FloodAlert {
@@ -18,7 +19,7 @@ interface FloodAlert {
 @Component({
   selector: 'app-welcome',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FeedComponent],
   templateUrl: 'welcome.component.html',
   styleUrls: ['welcome.component.css'],
 })
