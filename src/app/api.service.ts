@@ -79,4 +79,22 @@ export class ApiService {
       headers: this.getAuthHeaders(),
     });
   }
+
+  // Get all tasks
+  getTasks(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/tasks`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  // Create a new task
+  createTask(taskData: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/tasks`, taskData, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  getUsernames(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users`);
+  }
 }

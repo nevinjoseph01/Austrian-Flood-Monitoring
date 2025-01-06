@@ -10,6 +10,8 @@ import { FooterComponent } from './components/footer/footer.component';
 import { ApiService } from './api.service';
 import { filter } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import * as L from 'leaflet';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -31,6 +33,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
           <div class="dropdown-menu" [class.show]="dropdownOpen">
             <a class="dropdown-item" [routerLink]="['/welcome', getUsername()]">Home</a>
             <a class="dropdown-item" routerLink="/feed">Feed</a>
+            <a class="dropdown-item" routerLink="/tasks">Tasks</a>
             <!-- Show "Create Post" only for authorized users -->
             <a
               *ngIf="canCreatePost()"
@@ -38,6 +41,14 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
               (click)="openCreatePostModal()"
             >
               Create Post
+            </a>
+            <!-- Show "Create Task" only for authorized users -->
+            <a
+              *ngIf="canCreateTask()"
+              class="dropdown-item"
+              (click)="openCreateTaskModal()"
+            >
+              Create Task
             </a>
             <a class="dropdown-item" routerLink="/edit-profile">Edit Profile</a>
             <a class="dropdown-item" (click)="logout()">Logout</a>
@@ -48,7 +59,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
     <div class="content">
       <router-outlet></router-outlet>
     </div>
-    <!-- Include the modal template -->
+    <!-- Include the post modal template -->
     <div *ngIf="isCreatePostModalOpen" class="modal-overlay" (click)="closeCreatePostModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <h2>Create a Post</h2>
@@ -79,12 +90,86 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
               <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
             </ul>
           </div>
+          <!-- Geolocation Selection -->
+          <label>
+            Select Location on Map:
+            <div id="coords-info"></div>
+            <div id="map"></div>
+            <input
+              type="hidden" 
+              formControlName="geolocation"
+              [value]="selectedCoordinates | json"
+            />
+          </label>
           <div *ngIf="createPostError" class="error">
             {{ createPostError }}
           </div>
           <div class="modal-actions">
             <button type="submit" [disabled]="createPostForm.invalid">Post</button>
             <button type="button" (click)="closeCreatePostModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Include the task modal template -->
+    <div *ngIf="isCreateTaskModalOpen" class="modal-overlay" (click)="closeCreateTaskModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Create a Task</h2>
+        <form [formGroup]="createTaskForm" (ngSubmit)="submitTask()">
+          <label>
+            Title:
+            <input formControlName="title" />
+          </label>
+          <div
+            class="error"
+            *ngIf="createTaskForm.get('title')?.invalid && createTaskForm.get('title')?.touched"
+          >
+            Title is required.
+          </div>
+          <label>
+            Assigned user:
+            <input class="assigned_to_box"
+            formControlName="assignedTo"
+            (focus)="onAssignedToFocus()" 
+            (blur)="onAssignedToBlur()" 
+            (input)="onAssignedToInput($event)" />
+            <div *ngIf="usernamelist.length === 0" id="no-usernames"></div>
+            <div *ngFor="let name of usernamelist" id="username-card">
+              <div class="username-content" (click)="onUsernameContentClick($event)">
+                <div>{{ name }}</div>
+              </div>
+            </div>
+          </label>
+          <label>
+            Description:
+            <textarea formControlName="description"></textarea>
+          </label>
+          <label>
+            Progress:
+            <select formControlName="progress">
+              <option value="Not done" selected>Not done</option>
+              <option value="In progress">In progress</option>
+              <option value="Done">Done</option>
+            </select>
+          </label>
+          <!-- Add file input for media attachments -->
+          <label>
+            Attach Media:
+            <input type="file" (change)="onFileSelected($event)" multiple />
+          </label>
+          <!-- Display selected files -->
+          <div class="file-list" *ngIf="selectedFiles.length > 0">
+            <p>Selected Files:</p>
+            <ul>
+              <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
+            </ul>
+          </div>
+          <div *ngIf="createTaskError" class="error">
+            {{ createTaskError }}
+          </div>
+          <div class="modal-actions">
+            <button type="submit" [disabled]="createTaskForm.invalid">Publish</button>
+            <button type="button" (click)="closeCreateTaskModal()">Cancel</button>
           </div>
         </form>
       </div>
@@ -234,15 +319,60 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
       .file-list li {
         margin-bottom: 5px;
       }
+
+      #map {
+        height: 150px;
+      }
+
+      #coords-info {
+      margin-top: 10px; 
+      color: #f1c40f; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      #username-card {
+      position: relative;
+      top: -3px;
+      background: #dddddd;
+      border: 3px solid black;
+      border-radius: 10px;
+      padding: 0px;
+      width: 200px;
+      height: 30px;
+      }
+
+      .username-content {
+      color: black;
+      padding-left: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid grey;
+      border-radius: 10px 10px 0px 0px;
+      }
+
+      .username-content:hover {
+      background: #aaaaaa;
+      cursor: pointer;
+      }
     `,
   ],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit 
+{
   dropdownOpen = false;
   hideNavButtons = false;
   isCreatePostModalOpen = false;
   createPostForm: FormGroup;
   createPostError: string = '';
+  private map!: L.Map;
+  selectedCoordinates: [number, number] = [0, 0];
+
+  isCreateTaskModalOpen = false;
+  createTaskForm: FormGroup;
+  createTaskError: string = '';
+
+  isAssignedToFocused: boolean = false;
+  userlist: any = [];
+  usernamelist: any[] = [];
 
   // Add selectedFiles property to hold the selected files
   selectedFiles: File[] = [];
@@ -255,22 +385,102 @@ export class AppComponent implements OnInit {
     this.createPostForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
+      lat: ['', Validators.required],
+      lon: ['', Validators.required],
+    });
+
+    this.createTaskForm = this.fb.group({
+      title: ['', Validators.required],
+      description: [''],
+      progress: ['Not done'],
+      assignedTo: [''],
     });
   }
 
-  ngOnInit() {
+  ngOnInit() 
+  {
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        const currentUrl = event.urlAfterRedirects;
-        if (currentUrl === '/login' || currentUrl === '/register') {
-          this.hideNavButtons = true;
-        } else {
-          this.hideNavButtons = false;
-        }
-        // Close dropdown when navigating
-        this.dropdownOpen = false;
+    .pipe(filter((event) => event instanceof NavigationEnd))
+    .subscribe((event: NavigationEnd) => {
+      const currentUrl = event.urlAfterRedirects;
+      if (currentUrl === '/login' || currentUrl === '/register') {
+        this.hideNavButtons = true;
+      } else {
+        this.hideNavButtons = false;
+      }
+      // Close dropdown when navigating
+      this.dropdownOpen = false;
+    });
+
+    this.apiService.getUsernames().subscribe({
+      next: (response) => {
+        this.userlist = response.usernames;
+      },
+      error: (err) => {
+        console.error('Error fetching usernames:', err);
+        this.userlist = [''];
+      }
+    });
+  }
+
+  private mapInit() {
+    const austriaBounds = L.latLngBounds(
+      [46.372276, 9.530952],
+      [49.017784, 17.160776]
+    );
+        
+    this.map = L.map('map', {
+      center: [47.5162, 14.5501], // Center of Austria
+      zoom: 7,
+      minZoom: 6,
+      maxZoom: 12,
+      maxBounds: austriaBounds,
+      maxBoundsViscosity: 0.7,
+      zoomControl: false
+    });
+        
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    });
+    tiles.addTo(this.map);
+    
+    L.control.scale().addTo(this.map);
+    
+    let marker: L.Marker;
+    
+    // Handle map click
+    this.map.on('click', (e: any) => {
+      const { lat, lng } = e.latlng;
+
+      const triangleIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="
+        width: 0; height: 0; border-left: 
+        10px solid transparent; 
+        border-right: 10px solid transparent; 
+        border-top: 20px solid red;"></div>`,
+        iconAnchor: [10, 25],   // Positioning the triangle so that the bottom point will be where the user clicks
       });
+
+      this.selectedCoordinates = [lng, lat];
+      const InfoBox = document.getElementById("coords-info");
+      if(InfoBox) {
+        InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[1]}, Lon: ${this.selectedCoordinates[0]}`;
+      }
+
+      // Update the geolocation form control
+      this.createPostForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+      this.createPostForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+      this.createPostForm.get('lat')?.markAsTouched();
+      this.createPostForm.get('lon')?.markAsTouched();
+
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map);
+      }
+    });
   }
 
   isLoggedIn(): boolean {
@@ -291,7 +501,12 @@ export class AppComponent implements OnInit {
   }
 
   canCreatePost(): boolean {
-    const role = this.apiService.getUserRole();
+    const role = this.apiService.getUserRole() || '';
+    return role === 'special' || role === 'moderator';
+  }
+
+  canCreateTask(): boolean {
+    const role = this.apiService.getUserRole() || '';
     return role === 'special' || role === 'moderator';
   }
 
@@ -300,10 +515,27 @@ export class AppComponent implements OnInit {
     this.createPostForm.reset();
     this.createPostError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
+    setTimeout(() => this.mapInit(), 0);
+  }
+
+  openCreateTaskModal() {
+    this.isCreateTaskModalOpen = true;
+    this.createTaskForm.reset({
+      title: '',
+      description: '',
+      progress: 'Not done', // Default value preserved 😎
+      assignedTo: '',
+    });
+    this.createTaskError = '';
+    this.selectedFiles = []; // Reset selected files when opening the modal
   }
 
   closeCreatePostModal() {
     this.isCreatePostModalOpen = false;
+  }
+
+  closeCreateTaskModal() {
+    this.isCreateTaskModalOpen = false;
   }
 
   /**
@@ -312,9 +544,11 @@ export class AppComponent implements OnInit {
    *
    * @param event - The file input change event.
    */
-  onFileSelected(event: Event) {
+  onFileSelected(event: Event) 
+  {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
+    if (input.files) 
+    {
       // Convert FileList to Array
       const files = Array.from(input.files);
       const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'application/pdf'];
@@ -337,12 +571,16 @@ export class AppComponent implements OnInit {
     }
   }
 
-  submitPost() {
-    if (this.createPostForm.valid) {
+  submitPost() 
+  {
+    if (this.createPostForm.valid) 
+    {
       const formData = new FormData();
       formData.append('title', this.createPostForm.get('title')?.value);
       formData.append('description', this.createPostForm.get('description')?.value || '');
-
+      formData.append('lat', this.createPostForm.get('lat')?.value || '');
+      formData.append('lon', this.createPostForm.get('lon')?.value || '');
+      
       // Append selected files
       this.selectedFiles.forEach((file) => {
         formData.append('media', file);
@@ -360,6 +598,81 @@ export class AppComponent implements OnInit {
           this.createPostError = error.error.message || 'Failed to create post.';
         }
       );
+    }
+  }
+
+  submitTask() 
+  {
+    if (this.createTaskForm.valid) {
+      const formData = new FormData();
+      formData.append('title', this.createTaskForm.get('title')?.value);
+      formData.append('description', this.createTaskForm.get('description')?.value || '');
+      formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
+      formData.append('assignedTo', this.createTaskForm.get('assignedTo')?.value || '');
+
+      // Append selected files
+      this.selectedFiles.forEach((file) => {
+        formData.append('media', file);
+      });
+
+      this.apiService.createTask(formData).subscribe(
+        (response) => {
+          this.closeCreateTaskModal();
+          // Optionally, refresh the feed or navigate
+          this.router.navigate(['/tasks']);
+        },
+        (error) => {
+          console.error('Error creating task:', error);
+          // Show error message
+          this.createPostError = error.error.message || 'Failed to create task.';
+        }
+      );
+    }
+  }
+
+  onAssignedToFocus(): void {
+    this.isAssignedToFocused = true;
+  }
+  
+  onAssignedToBlur(): void {
+    this.isAssignedToFocused = false;
+    setTimeout(() => {
+      this.usernamelist = [];
+    },250);
+    
+  }
+
+  onAssignedToInput(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+
+    if(this.isAssignedToFocused) {
+      const username = inputElement.value;
+      
+      const users: any[] = []
+      this.userlist.forEach((user: any) => {
+        if(user.indexOf(username) >= 0) {
+          users.push(user);
+        }
+      });
+
+      this.usernamelist = users;
+    }
+    // Perform any additional logic with the new value
+  }
+
+  onUsernameContentClick(event: Event): void {
+    const usernameHolder = event.target as HTMLInputElement;
+    const name = usernameHolder.firstChild?.textContent;
+    const inputElement = document.querySelector('.assigned_to_box') as HTMLInputElement;
+    
+    if (inputElement) {
+      if(name) {
+        inputElement.value = name;
+        this.createTaskForm.get('assignedTo')?.setValue(name);
+      }
+      else {
+        inputElement.value = '';
+      }
     }
   }
 }

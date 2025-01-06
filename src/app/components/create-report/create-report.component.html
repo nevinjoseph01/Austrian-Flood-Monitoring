@@ -13,6 +13,17 @@
       Description:
       <textarea formControlName="description"></textarea>
     </label>
+    <!-- Geolocation Selection -->
+          <label>
+            Select Location on Map:
+            <div id="coords-info"></div>
+            <div id="map"></div>
+            <input
+              type="hidden"
+              formControlName="geolocation"
+              [value]="selectedCoordinates | json"
+            />
+          </label>
 
     <button type="submit" [disabled]="reportForm.invalid">Submit Report</button>
   </form>
