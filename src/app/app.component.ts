@@ -624,7 +624,7 @@ export class AppComponent implements OnInit
         (error) => {
           console.error('Error creating task:', error);
           // Show error message
-          this.createPostError = error.error.message || 'Failed to create task.';
+          this.createTaskError = error.error.message || 'Failed to create task.';
         }
       );
     }

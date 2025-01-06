@@ -12,17 +12,26 @@ import { CommonModule } from '@angular/common';
   styleUrls: [ 'create-task.component.css' ],
 })
 export class CreateTaskComponent {
+  dropdownOpen = false;
+  hideNavButtons = false;
+
   isCreateTaskModalOpen = false;
-  taskForm: FormGroup;
+  createTaskForm: FormGroup;
   createTaskError: string = '';
-  message: string = '';
 
   isAssignedToFocused: boolean = false;
   userlist: any = [];
   usernamelist: any[] = [];
 
-  constructor(private fb: FormBuilder, private apiService: ApiService, private router: Router) {
-    this.taskForm = this.fb.group({
+  // Add selectedFiles property to hold the selected files
+  selectedFiles: File[] = [];
+
+  constructor(
+    private apiService: ApiService,
+    private router: Router,
+    private fb: FormBuilder
+  ) {
+    this.createTaskForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
       progress: ['Not done'],
@@ -30,7 +39,8 @@ export class CreateTaskComponent {
     });
   }
 
-  ngOnInit() {
+  ngOnInit() 
+  {
     this.apiService.getUsernames().subscribe({
       next: (response) => {
         this.userlist = response.usernames;
@@ -42,31 +52,101 @@ export class CreateTaskComponent {
     });
   }
 
+  isLoggedIn(): boolean {
+    return !!this.apiService.getUserId();
+  }
+
+  getUsername(): string | null {
+    return this.apiService.getUsername();
+  }
+
+  logout() {
+    this.apiService.logout();
+    this.router.navigate(['']);
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  canCreateTask(): boolean {
+    const role = this.apiService.getUserRole() || '';
+    return role === 'special' || role === 'moderator';
+  }
+
   openCreateTaskModal() {
     this.isCreateTaskModalOpen = true;
-    this.taskForm.reset({
+    this.createTaskForm.reset({
       title: '',
       description: '',
       progress: 'Not done', // Default value preserved 😎
       assignedTo: '',
     });
     this.createTaskError = '';
+    this.selectedFiles = []; // Reset selected files when opening the modal
   }
 
   closeCreateTaskModal() {
     this.isCreateTaskModalOpen = false;
   }
 
-  onTaskSubmit() {
-    if (this.taskForm.valid) {
-      this.apiService.createTask(this.taskForm.value).subscribe(
+  /**
+   * Handles the file selection event when users choose files to attach.
+   * This method processes the selected files, validates them, and stores them in the component.
+   *
+   * @param event - The file input change event.
+   */
+  onFileSelected(event: Event) 
+  {
+    const input = event.target as HTMLInputElement;
+    if (input.files) 
+    {
+      // Convert FileList to Array
+      const files = Array.from(input.files);
+      const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4', 'application/pdf'];
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const validFiles: File[] = [];
+
+      for (let file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          alert(`Unsupported file type: ${file.name}`);
+          continue;
+        }
+        if (file.size > maxSize) {
+          alert(`File too large (max 10MB): ${file.name}`);
+          continue;
+        }
+        validFiles.push(file);
+      }
+
+      this.selectedFiles = validFiles.slice(0, 5); // Limit to 5 files
+    }
+  }
+
+  submitTask() 
+  {
+    if (this.createTaskForm.valid) {
+      const formData = new FormData();
+      formData.append('title', this.createTaskForm.get('title')?.value);
+      formData.append('description', this.createTaskForm.get('description')?.value || '');
+      formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
+      formData.append('assignedTo', this.createTaskForm.get('assignedTo')?.value || '');
+
+      // Append selected files
+      this.selectedFiles.forEach((file) => {
+        formData.append('media', file);
+      });
+
+      this.apiService.createTask(formData).subscribe(
         (response) => {
-          // Navigate back to tasks
+          this.closeCreateTaskModal();
+          // Optionally, refresh the feed or navigate
           this.router.navigate(['/tasks']);
         },
         (error) => {
           console.error('Error creating task:', error);
-          this.message = error.error.message || 'Failed to create task';
+          // Show error message
+          this.createTaskError = error.error.message || 'Failed to create task.';
         }
       );
     }
@@ -110,6 +190,7 @@ export class CreateTaskComponent {
     if (inputElement) {
       if(name) {
         inputElement.value = name;
+        this.createTaskForm.get('assignedTo')?.setValue(name);
       }
       else {
         inputElement.value = '';

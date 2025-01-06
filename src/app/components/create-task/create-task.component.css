@@ -1,25 +1,91 @@
-.form-container {
-  max-width: 600px;
-  margin: 50px auto;
-  padding: 20px;
+.nav-button {
   background-color: #1a1a1a;
+  color: #f1c40f;
+  border: none;
+  padding: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle::after {
+  content: '';
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #1a1a1a;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  margin-top: 5px;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  color: #f1c40f;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #333;
+}
+
+.content {
+  padding-top: 50px;
+  min-height: calc(100vh - 160px); /* Adjust based on header and footer height */
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  padding: 20px;
   border-radius: 10px;
+  width: 80%;
+  max-width: 500px;
   color: #f1c40f;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-h2 {
-  text-align: center;
+.modal-content h2 {
+  margin-top: 0;
 }
 
-label {
+.modal-content label {
   display: block;
   margin-bottom: 10px;
 }
 
-input,
-textarea {
-  width: 100%;
+.modal-content input,
+.modal-content textarea {
+  width: 96.5%;
   padding: 8px;
   border: 1px solid #333;
   border-radius: 5px;
@@ -28,26 +94,20 @@ textarea {
   font-size: 1em;
 }
 
-textarea {
+.modal-content textarea {
   resize: vertical;
   min-height: 100px;
 }
 
-.error {
-  color: #e74c3c;
-  font-size: 0.9em;
-  margin-bottom: 10px;
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 
-.message {
-  margin-top: 10px;
-  color: #e74c3c;
-  text-align: center;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
+.modal-actions button {
+  margin-left: 10px;
+  padding: 10px 20px;
   background-color: #f1c40f;
   color: #1a1a1a;
   border: none;
@@ -56,21 +116,50 @@ button {
   font-size: 1em;
 }
 
-button:disabled {
-  background-color: #7f8c8d;
-  cursor: not-allowed;
+.modal-actions button:hover {
+  background-color: #d4ac0d;
+}
+
+.modal-content .error {
+  color: #e74c3c;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.file-list {
+  margin-top: 10px;
+  color: #f1c40f;
+}
+
+.file-list ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.file-list li {
+  margin-bottom: 5px;
+}
+
+#map {
+  height: 150px;
+}
+
+#coords-info {
+margin-top: 10px; 
+color: #f1c40f; 
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 #username-card {
-  position: relative;
-  top: -3px;
-  background: #dddddd;
-  border: 3px solid black;
-  border-radius: 10px;
-  padding: 0px;
-  width: 200px;
-  height: 30px;
-  }
+position: relative;
+top: -3px;
+background: #dddddd;
+border: 3px solid black;
+border-radius: 10px;
+padding: 0px;
+width: 200px;
+height: 30px;
+}
 
 .username-content {
 color: black;

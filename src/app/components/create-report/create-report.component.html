@@ -1,31 +1,51 @@
-<div class="form-container">
-  <h2>Create a Report</h2>
-  <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
-    <label>
-      Title:
-      <input formControlName="title" />
-    </label>
-    <div class="error" *ngIf="reportForm.get('title')?.invalid && reportForm.get('title')?.touched">
-      Title is required.
-    </div>
-
-    <label>
-      Description:
-      <textarea formControlName="description"></textarea>
-    </label>
-    <!-- Geolocation Selection -->
-          <label>
-            Select Location on Map:
-            <div id="coords-info"></div>
-            <div id="map"></div>
-            <input
-              type="hidden"
-              formControlName="geolocation"
-              [value]="selectedCoordinates | json"
-            />
-          </label>
-
-    <button type="submit" [disabled]="reportForm.invalid">Submit Report</button>
-  </form>
-  <div *ngIf="message" class="message">{{ message }}</div>
+<div *ngIf="isCreatePostModalOpen" class="modal-overlay" (click)="closeCreatePostModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Create a Post</h2>
+    <form [formGroup]="createPostForm" (ngSubmit)="submitPost()">
+      <label>
+        Title:
+        <input formControlName="title" />
+      </label>
+      <div
+        class="error"
+        *ngIf="createPostForm.get('title')?.invalid && createPostForm.get('title')?.touched"
+      >
+        Title is required.
+      </div>
+      <label>
+        Description:
+        <textarea formControlName="description"></textarea>
+      </label>
+      <!-- Add file input for media attachments -->
+      <label>
+        Attach Media:
+        <input type="file" (change)="onFileSelected($event)" multiple />
+      </label>
+      <!-- Display selected files -->
+      <div class="file-list" *ngIf="selectedFiles.length > 0">
+        <p>Selected Files:</p>
+        <ul>
+          <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
+        </ul>
+      </div>
+      <!-- Geolocation Selection -->
+      <label>
+        Select Location on Map:
+        <div id="coords-info"></div>
+        <div id="map"></div>
+        <input
+          type="hidden" 
+          formControlName="geolocation"
+          [value]="selectedCoordinates | json"
+        />
+      </label>
+      <div *ngIf="createPostError" class="error">
+        {{ createPostError }}
+      </div>
+      <div class="modal-actions">
+        <button type="submit" [disabled]="createPostForm.invalid">Post</button>
+        <button type="button" (click)="closeCreatePostModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>

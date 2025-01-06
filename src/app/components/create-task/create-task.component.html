@@ -1,48 +1,62 @@
-<div class="modal-content" (click)="$event.stopPropagation()">
-  <h2>Create a Task</h2>
-  <form [formGroup]="taskForm" (ngSubmit)="onTaskSubmit()">
-    <label>
-      Title:
-      <input formControlName="title" />
-    </label>
-    <div
-      class="error"
-      *ngIf="taskForm.get('title')?.invalid && taskForm.get('title')?.touched"
-    >
-      Title is required.
-    </div>
-    <label>
-      Assigned user:
-      <input class="assigned_to_box"
-      formControlName="assignedTo"
-      (focus)="onAssignedToFocus()" 
-      (blur)="onAssignedToBlur()" 
-      (input)="onAssignedToInput($event)" />
-      <div *ngIf="usernamelist.length === 0" id="no-usernames"></div>
-      <div *ngFor="let name of usernamelist" id="username-card">
-        <div class="username-content" (click)="onUsernameContentClick($event)">
-          <div>{{ name }}</div>
-        </div>
+<div *ngIf="isCreateTaskModalOpen" class="modal-overlay" (click)="closeCreateTaskModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Create a Task</h2>
+    <form [formGroup]="createTaskForm" (ngSubmit)="submitTask()">
+      <label>
+        Title:
+        <input formControlName="title" />
+      </label>
+      <div
+        class="error"
+        *ngIf="createTaskForm.get('title')?.invalid && createTaskForm.get('title')?.touched"
+      >
+        Title is required.
       </div>
-    </label>
-    <label>
-      Description:
-      <textarea formControlName="description"></textarea>
-    </label>
-    <label>
-      Progress:
-      <select formControlName="progress">
-        <option value="Not done" selected>Not done</option>
-        <option value="In progress">In progress</option>
-        <option value="Done">Done</option>
-      </select>
-    </label>
-    <div *ngIf="createTaskError" class="error">
-      {{ createTaskError }}
-    </div>
-    <div class="modal-actions">
-      <button type="submit" [disabled]="taskForm.invalid">Publish</button>
-      <button type="button" (click)="closeCreateTaskModal()">Cancel</button>
-    </div>
-  </form>
+      <label>
+        Assigned user:
+        <input class="assigned_to_box"
+        formControlName="assignedTo"
+        (focus)="onAssignedToFocus()" 
+        (blur)="onAssignedToBlur()" 
+        (input)="onAssignedToInput($event)" />
+        <div *ngIf="usernamelist.length === 0" id="no-usernames"></div>
+        <div *ngFor="let name of usernamelist" id="username-card">
+          <div class="username-content" (click)="onUsernameContentClick($event)">
+            <div>{{ name }}</div>
+          </div>
+        </div>
+      </label>
+      <label>
+        Description:
+        <textarea formControlName="description"></textarea>
+      </label>
+      <label>
+        Progress:
+        <select formControlName="progress">
+          <option value="Not done" selected>Not done</option>
+          <option value="In progress">In progress</option>
+          <option value="Done">Done</option>
+        </select>
+      </label>
+      <!-- Add file input for media attachments -->
+      <label>
+        Attach Media:
+        <input type="file" (change)="onFileSelected($event)" multiple />
+      </label>
+      <!-- Display selected files -->
+      <div class="file-list" *ngIf="selectedFiles.length > 0">
+        <p>Selected Files:</p>
+        <ul>
+          <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
+        </ul>
+      </div>
+      <div *ngIf="createTaskError" class="error">
+        {{ createTaskError }}
+      </div>
+      <div class="modal-actions">
+        <button type="submit" [disabled]="createTaskForm.invalid">Publish</button>
+        <button type="button" (click)="closeCreateTaskModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
