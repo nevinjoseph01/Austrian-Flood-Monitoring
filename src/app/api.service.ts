@@ -94,7 +94,7 @@ export class ApiService {
     });
   }
 
-  getUsers(): Observable<any> {
+  getUsernames(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/users`);
   }
 }

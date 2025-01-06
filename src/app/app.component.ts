@@ -384,7 +384,8 @@ export class AppComponent implements OnInit
     this.createPostForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
-      geolocation: ['', Validators.required],
+      lat: ['', Validators.required],
+      lon: ['', Validators.required],
     });
 
     this.createTaskForm = this.fb.group({
@@ -410,12 +411,14 @@ export class AppComponent implements OnInit
       this.dropdownOpen = false;
     });
 
-    this.userlist = this.apiService.getUsers();
-  }
-
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.mapInit();
+    this.apiService.getUsernames().subscribe({
+      next: (response) => {
+        this.userlist = response.usernames;
+      },
+      error: (err) => {
+        console.error('Error fetching usernames:', err);
+        this.userlist = [''];
+      }
     });
   }
 
@@ -459,11 +462,17 @@ export class AppComponent implements OnInit
         iconAnchor: [10, 25],   // Positioning the triangle so that the bottom point will be where the user clicks
       });
 
-      this.selectedCoordinates = [lat, lng];
+      this.selectedCoordinates = [lng, lat];
       const InfoBox = document.getElementById("coords-info");
       if(InfoBox) {
-        InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[0]}, Lon: ${this.selectedCoordinates[1]}`;
+        InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[1]}, Lon: ${this.selectedCoordinates[0]}`;
       }
+
+      // Update the geolocation form control
+      this.createPostForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+      this.createPostForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+      this.createPostForm.get('lat')?.markAsTouched();
+      this.createPostForm.get('lon')?.markAsTouched();
 
       if (marker) {
         marker.setLatLng([lat, lng]);
@@ -568,8 +577,9 @@ export class AppComponent implements OnInit
       const formData = new FormData();
       formData.append('title', this.createPostForm.get('title')?.value);
       formData.append('description', this.createPostForm.get('description')?.value || '');
-      formData.append('geolocation', this.createPostForm.get('geolocation')?.value || '');
-
+      formData.append('lat', this.createPostForm.get('lat')?.value || '');
+      formData.append('lon', this.createPostForm.get('lon')?.value || '');
+      
       // Append selected files
       this.selectedFiles.forEach((file) => {
         formData.append('media', file);
@@ -644,7 +654,6 @@ export class AppComponent implements OnInit
         }
       });
 
-      users.push('asd');  // This is just for testing purposes, once this is on the main branch, this needs to be deleted
       this.usernamelist = users;
     }
     // Perform any additional logic with the new value
@@ -658,6 +667,7 @@ export class AppComponent implements OnInit
     if (inputElement) {
       if(name) {
         inputElement.value = name;
+        this.createTaskForm.get('assignedTo')?.setValue(name);
       }
       else {
         inputElement.value = '';

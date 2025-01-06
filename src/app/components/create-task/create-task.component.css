@@ -60,3 +60,27 @@ button:disabled {
   background-color: #7f8c8d;
   cursor: not-allowed;
 }
+
+#username-card {
+  position: relative;
+  top: -3px;
+  background: #dddddd;
+  border: 3px solid black;
+  border-radius: 10px;
+  padding: 0px;
+  width: 200px;
+  height: 30px;
+  }
+
+.username-content {
+color: black;
+padding-left: 10px;
+padding-bottom: 5px;
+border-bottom: 1px solid grey;
+border-radius: 10px 10px 0px 0px;
+}
+
+.username-content:hover {
+background: #aaaaaa;
+cursor: pointer;
+}

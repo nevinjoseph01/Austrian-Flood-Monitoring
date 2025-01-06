@@ -248,17 +248,9 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
       }
     }).addTo(this.map);
 
-    // Load and display historical data (this one here probably takes a long time)
     this.updateFloodAlerts();
-
-    for(var i = 0; i < 77; i++)
-    {
-      /*this.setupHistWaterData(i);*/
-      if(i == 76)
-      {
-        this.addLayerControl();
-      }
-    }
+    // Here display hist water data REDO!!!
+    this.addLayerControl();
   }
 
   // ------------- HISTORICAL WATER DATA ------------
