@@ -7,6 +7,7 @@ import { WelcomeComponent } from './components/welcome/welcome.component';
 import { FeedComponent } from './components/feed/feed.component';
 import { CreateReportComponent } from './components/create-report/create-report.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
+import { EditProfileComponent } from './components/edit-profile/edit-profile.component';
 
 export const routes: Routes = [
   {
@@ -36,6 +37,10 @@ export const routes: Routes = [
   {
     path: 'create-report',
     component: CreateReportComponent,
+  },
+  {
+    path: 'edit-profile',
+    component: EditProfileComponent,
   },
   {
     path: '**',

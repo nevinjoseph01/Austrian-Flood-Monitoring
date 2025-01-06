@@ -39,6 +39,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
             >
               Create Post
             </a>
+            <a class="dropdown-item" routerLink="/edit-profile">Edit Profile</a>
             <a class="dropdown-item" (click)="logout()">Logout</a>
           </div>
         </div>
