@@ -502,7 +502,7 @@ export class AppComponent implements OnInit
 
   canCreatePost(): boolean {
     const role = this.apiService.getUserRole() || '';
-    return role === 'special' || role === 'moderator';
+    return role === 'special' || role === 'moderator' || role === 'normal';
   }
 
   canCreateTask(): boolean {
