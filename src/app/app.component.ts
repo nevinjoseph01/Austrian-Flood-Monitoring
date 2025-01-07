@@ -93,8 +93,8 @@ import { Observable } from 'rxjs';
           <!-- Geolocation Selection -->
           <label>
             Select Location on Map:
-            <div id="coords-info"></div>
-            <div id="map"></div>
+            <div id="coords-info-post"></div>
+            <div id="map_post"></div>
             <input
               type="hidden" 
               formControlName="geolocation"
@@ -151,6 +151,17 @@ import { Observable } from 'rxjs';
               <option value="In progress">In progress</option>
               <option value="Done">Done</option>
             </select>
+          </label>
+          <!-- Geolocation Selection -->
+          <label>
+            Select Location on Map:
+            <div id="coords-info-task"></div>
+            <div id="map_task"></div>
+            <input
+              type="hidden" 
+              formControlName="geolocation"
+              [value]="selectedCoordinates | json"
+            />
           </label>
           <!-- Add file input for media attachments -->
           <label>
@@ -320,11 +331,21 @@ import { Observable } from 'rxjs';
         margin-bottom: 5px;
       }
 
-      #map {
+      #map_post {
         height: 150px;
       }
 
-      #coords-info {
+      #map_task {
+        height: 150px;
+      }
+
+      #coords-info-post {
+      margin-top: 10px; 
+      color: #f1c40f; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      #coords-info-task {
       margin-top: 10px; 
       color: #f1c40f; 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -423,13 +444,13 @@ export class AppComponent implements OnInit
     });
   }
 
-  private mapInit() {
+  private mapInit(id_name: string, coords_info_name: string) {
     const austriaBounds = L.latLngBounds(
       [46.372276, 9.530952],
       [49.017784, 17.160776]
     );
         
-    this.map = L.map('map', {
+    this.map = L.map(id_name, {
       center: [47.5162, 14.5501], // Center of Austria
       zoom: 7,
       minZoom: 6,
@@ -464,16 +485,27 @@ export class AppComponent implements OnInit
       });
 
       this.selectedCoordinates = [lng, lat];
-      const InfoBox = document.getElementById("coords-info");
+      const InfoBox = document.getElementById(coords_info_name);
       if(InfoBox) {
         InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[1]}, Lon: ${this.selectedCoordinates[0]}`;
       }
 
       // Update the geolocation form control
-      this.createPostForm.get('lat')?.setValue(this.selectedCoordinates[1]);
-      this.createPostForm.get('lon')?.setValue(this.selectedCoordinates[0]);
-      this.createPostForm.get('lat')?.markAsTouched();
-      this.createPostForm.get('lon')?.markAsTouched();
+      if (this.isCreatePostModalOpen) {
+        this.createPostForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+        this.createPostForm.get('lat')?.markAsTouched();
+
+        this.createPostForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+        this.createPostForm.get('lon')?.markAsTouched();
+      } 
+      
+      if (this.isCreateTaskModalOpen) {
+        this.createTaskForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+        this.createTaskForm.get('lat')?.markAsTouched();
+
+        this.createTaskForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+        this.createTaskForm.get('lon')?.markAsTouched();
+      }
 
       if (marker) {
         marker.setLatLng([lat, lng]);
@@ -515,7 +547,7 @@ export class AppComponent implements OnInit
     this.createPostForm.reset();
     this.createPostError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
-    setTimeout(() => this.mapInit(), 0);
+    setTimeout(() => this.mapInit('map_post', "coords-info-post"), 0);
   }
 
   openCreateTaskModal() {
@@ -528,6 +560,7 @@ export class AppComponent implements OnInit
     });
     this.createTaskError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
+    setTimeout(() => this.mapInit('map_task', "coords-info-task"), 0);
   }
 
   closeCreatePostModal() {
@@ -609,6 +642,8 @@ export class AppComponent implements OnInit
       formData.append('description', this.createTaskForm.get('description')?.value || '');
       formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
       formData.append('assignedTo', this.createTaskForm.get('assignedTo')?.value || '');
+      formData.append('lat', this.createTaskForm.get('lat')?.value || '');
+      formData.append('lon', this.createTaskForm.get('lon')?.value || '');
 
       // Append selected files
       this.selectedFiles.forEach((file) => {
