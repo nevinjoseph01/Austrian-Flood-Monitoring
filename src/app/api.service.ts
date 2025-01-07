@@ -94,6 +94,11 @@ export class ApiService {
     });
   }
 
+  // Update location
+  updateLocation(userId: string, location: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/users/${userId}/location`, { location });
+  }
+
   getUsernames(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/users`);
   }
