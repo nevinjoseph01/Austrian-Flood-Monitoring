@@ -7,7 +7,7 @@ import { environment } from '../environments/environment';
   providedIn: 'root',
 })
 export class ApiService {
-  private baseUrl = 'https://floodmonitor-backend.fly.dev/api'; // Base URL for API
+  private baseUrl = 'localhost'; //'https://floodmonitor-backend.fly.dev/api'; // Base URL for API
 
   constructor(private http: HttpClient) {}
 
