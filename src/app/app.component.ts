@@ -97,8 +97,13 @@ import { Observable } from 'rxjs';
             <div id="map_post"></div>
             <input
               type="hidden" 
-              formControlName="geolocation"
-              [value]="selectedCoordinates | json"
+              formControlName="lon"
+              [value]="selectedCoordinates[0] | json"
+            />
+            <input
+              type="hidden" 
+              formControlName="lat"
+              [value]="selectedCoordinates[1] | json"
             />
           </label>
           <div *ngIf="createPostError" class="error">
@@ -159,8 +164,13 @@ import { Observable } from 'rxjs';
             <div id="map_task"></div>
             <input
               type="hidden" 
-              formControlName="geolocation"
-              [value]="selectedCoordinates | json"
+              formControlName="lon"
+              [value]="selectedCoordinates[0] | json"
+            />
+            <input
+              type="hidden" 
+              formControlName="lat"
+              [value]="selectedCoordinates[1] | json"
             />
           </label>
           <!-- Add file input for media attachments -->
@@ -415,6 +425,8 @@ export class AppComponent implements OnInit
       description: [''],
       progress: ['Not done'],
       assignedTo: [''],
+      lat: ['', Validators.required],
+      lon: ['', Validators.required],
     });
   }
 

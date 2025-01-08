@@ -40,7 +40,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private apiService: ApiService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
@@ -59,15 +59,15 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     this.addScaleControl();
     this.addMapClickListener();
 
-    // Add incidents to map
-    this.loadReports();
-    // Add tasks to map
-    this.loadTasks();
     // Fetch data once
     this.fetchAndUpdateWaterData();
 
     // (Optional) Periodic refresh every 10 minutes
     this.setupPeriodicDataFetch();
+
+    setTimeout(() => {
+      this.addLayerControl(); // Ensure layers are ready before adding control
+  }, 1000); // Adjust delay as necessary
   }
 
   // ----------------- MAP INITIALIZATION -----------------
@@ -77,7 +77,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       [49.017784, 17.160776]
     );
 
-    this.map = L.map('landing-map', {
+    this.map = L.map('welcome-map', {
       center: [47.5162, 14.5501], // Center of Austria
       zoom: 7,
       minZoom: 6,
@@ -167,7 +167,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private loadReports() {
     this.apiService.getReports().subscribe(
       (data) => {
-        const geoJSONdata = this.preprocessReportsToGeoJSON(data);
+        const geoJSONdata = this.preprocessReportsToGeoJSON(data.reports);
         this.reportLayer = L.geoJSON(geoJSONdata, {
           pointToLayer: (feature: any, latlng: L.LatLng) => {
             return L.circleMarker(latlng, {
@@ -183,7 +183,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
             layer.bindPopup(`
               <strong>${feature.properties.title||'Unnamed task'}</strong><br>
               Description: ${feature.properties.description||'No description'}<br>
-              Posted at: ${feature.properties.createdAt||'Unknown'} by ${feature.properties.createdBy||'Unknown'}<br>
+              Posted at: ${feature.properties.createdAt||'Unknown'} by ${feature.properties.createdBy.username||'Unknown'}<br>
               `);
           }
         }).addTo(this.map);
@@ -197,7 +197,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private preprocessReportsToGeoJSON(reports: any[]): any {
     return {
       type: "FeatureCollection",
-      features: reports.filter((report) => report.geolocation && report.geolocation.coordinates)
+      features: reports.filter((report) => report.geolocation && report.geolocation.coordinates)   // && report.verified === true WHENEVER VERIFIED IS ADDED AS A FEATURE
       .map((report) => ({
         type: "Feature",
         geometry: {
@@ -220,7 +220,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private loadTasks() {
     this.apiService.getTasks().subscribe(
       (data) => {
-        const geoJSONdata = this.preprocessTasksToGeoJSON(data);
+        const geoJSONdata = this.preprocessTasksToGeoJSON(data.tasks);
         this.taskLayer = L.geoJSON(geoJSONdata, {
           pointToLayer: (feature: any, latlng: L.LatLng) => {
             return L.circleMarker(latlng, {
@@ -237,8 +237,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
               <strong>${feature.properties.title||'Unnamed task'}</strong><br>
               Description: ${feature.properties.description||'No description'}<br>
               Progress: ${feature.properties.progress||'Not set'}<br>
-              Assigned to: ${feature.properties.assignedTo||'nobody'}<br>
-              Created at: ${feature.properties.createdAt||'Unknown'} by ${feature.properties.createdBy||'Unknown'}<br>
+              Assigned to: ${feature.properties.assignedTo.username||'nobody'}<br>
+              Created at: ${feature.properties.createdAt||'Unknown'} by ${feature.properties.createdBy.username||'Unknown'}<br>
               `);
           }
         }).addTo(this.map);
@@ -333,9 +333,14 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       }
     }).addTo(this.map);
 
+    // Add incidents to map
+    this.loadReports();
+    // Add tasks to map
+    this.loadTasks();
+    // Add flood alerts to map
     this.updateFloodAlerts();
     // Here display hist water data REDO!!!
-    this.addLayerControl();
+    // this.addLayerControl();
   }
   
   // ------------- HISTORICAL WATER DATA ------------

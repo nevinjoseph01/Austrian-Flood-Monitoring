@@ -9,7 +9,7 @@ html, body {
   width: 100%;
   height: 92vh;
 }
-#map {
+#welcome-map {
   flex: 0 0 60%;
   height: 100%;
 }

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  baseUrl: 'https://floodmonitor-backend.fly.dev/api'
+  baseUrl: 'http://localhost:3000/api'//'https://floodmonitor-backend.fly.dev/api'
 };
