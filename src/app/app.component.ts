@@ -384,7 +384,7 @@ export class AppComponent implements OnInit
   isCreatePostModalOpen = false;
   createPostForm: FormGroup;
   createPostError: string = '';
-  private map!: L.Map;
+  private map_form!: L.Map;
   selectedCoordinates: [number, number] = [0, 0];
 
   isCreateTaskModalOpen = false;
@@ -450,7 +450,7 @@ export class AppComponent implements OnInit
       [49.017784, 17.160776]
     );
         
-    this.map = L.map(id_name, {
+    this.map_form = L.map(id_name, {
       center: [47.5162, 14.5501], // Center of Austria
       zoom: 7,
       minZoom: 6,
@@ -464,14 +464,14 @@ export class AppComponent implements OnInit
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     });
-    tiles.addTo(this.map);
+    tiles.addTo(this.map_form);
     
-    L.control.scale().addTo(this.map);
+    L.control.scale().addTo(this.map_form);
     
     let marker: L.Marker;
     
     // Handle map click
-    this.map.on('click', (e: any) => {
+    this.map_form.on('click', (e: any) => {
       const { lat, lng } = e.latlng;
 
       const triangleIcon = L.divIcon({
@@ -510,7 +510,7 @@ export class AppComponent implements OnInit
       if (marker) {
         marker.setLatLng([lat, lng]);
       } else {
-        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map);
+        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map_form);
       }
     });
   }
