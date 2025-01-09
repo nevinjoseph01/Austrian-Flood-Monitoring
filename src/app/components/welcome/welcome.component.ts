@@ -171,12 +171,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
         this.reportLayer = L.geoJSON(geoJSONdata, {
           pointToLayer: (feature: any, latlng: L.LatLng) => {
             return L.circleMarker(latlng, {
-              radius: 8,
-              fillColor: '#adad00',
+              radius: 7,
+              fillColor: '#5e03fc',
               color: '#000',
               weight: 1,
               opacity: 1,
-              fillOpacity: 0.8
+              fillOpacity: 0.95
             });
           },
           onEachFeature: (feature: any, layer: L.Layer) => {
@@ -235,9 +235,9 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
           onEachFeature: (feature: any, layer: L.Layer) => {
             layer.bindPopup(`
               <strong>${feature.properties.title||'Unnamed task'}</strong><br>
-              Description: ${feature.properties.description||'No description'}<br>
-              Progress: ${feature.properties.progress||'Not set'}<br>
-              Assigned to: ${feature.properties.assignedTo.username||'nobody'}<br>
+              <strong style = "color:${this.getTaskColor(feature.properties.progress)}">${feature.properties.progress||'Not set'}</strong><br><br>
+              Description: <br>${feature.properties.description.replaceAll("\r\n", "<br>")||'No description'}<br><br>
+              Assigned to: ${feature.properties.assignedTo.username||'Nobody'}<br>
               Created at: ${feature.properties.createdAt||'Unknown'} by ${feature.properties.createdBy.username||'Unknown'}<br>
               `);
           }
