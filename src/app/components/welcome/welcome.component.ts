@@ -109,10 +109,38 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   
   // ----------------- LEGENDS -----------------
   private addLegends(): void {
+    
+    // Helper function to convert hex color to RGB
+    const hexToRgb = (hex: string): { r: number, g: number, b: number } | null => {
+      hex = hex.replace('#', '');
+      if (hex.length !== 6) return null;
+    
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+    
+      return { r, g, b };
+    }
+
+    const getTextColorBasedOnBackground = (backgroundColor: string) => {
+      const rgb = hexToRgb(backgroundColor);
+      if (!rgb) return 'black';
+      
+      const brightness = 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
+      
+      return brightness < 128 ? 'white' : 'black';
+    }
+
     // 1) Water Level Legend
     class WaterLevelLegendControl extends L.Control {
       override onAdd(map: L.Map) {
         const div = L.DomUtil.create('div', 'info legend');
+        div.style.backgroundColor = 'white';
+        div.style.padding = "6px 8px";
+        div.style.font = "14px/16px Arial, Helvetica, sans-serif";
+        div.style.borderRadius = "5px";
+        div.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.2)";
+
         const grades = [0, 50, 300, 600, 900, 1200, 1500];
         div.innerHTML += '<strong>Water Level (m)</strong><br>';
 
@@ -133,34 +161,111 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
         };
 
         for (let i = 0; i < grades.length; i++) {
+          let text_color = getTextColorBasedOnBackground(getColor(grades[i] + 1));
           div.innerHTML +=
-            `<i style="background:${getColor(grades[i] + 1)}"></i> ${grades[i]}` +
-            (grades[i + 1] ? `&ndash;${grades[i + 1]}<br>` : '+');
+            `<i style="display: inline-block; width:100%; padding: 2px; margin: 2px 0; color:${text_color}; background:${getColor(grades[i] + 1)}"> ${grades[i]}` +
+            (grades[i + 1] ? `&ndash;${grades[i + 1]}</i><br>` : '+');
         }
         return div;
       }
     }
-    const waterLevelLegend = new WaterLevelLegendControl({ position: 'bottomright' });
-    waterLevelLegend.addTo(this.map);
 
     // 2) Flood Alert Legend
     class FloodAlertLegendControl extends L.Control {
       override onAdd(map: L.Map) {
         const div = L.DomUtil.create('div', 'info legend flood-alert-legend');
-        div.innerHTML = `
-          <strong>Flood Alerts</strong><br>
-          <i style="background: #FF0000"></i> High Alert<br>
-          <i style="background: #FFA500"></i> Medium Alert<br>
-          <i style="background: #FFFF00"></i> Low Alert<br>
-          <i style="background: #FF6347"></i> Rising<br>
-          <i style="background: #32CD32"></i> Falling<br>
-          <i style="background: #A9A9A9"></i> Stale<br>
-        `;
+        div.style.backgroundColor = 'white';
+        div.style.padding = "6px 8px";
+        div.style.font = "14px/16px Arial, Helvetica, sans-serif";
+        div.style.borderRadius = "5px";
+        div.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.2)";
+
+        div.innerHTML = `<strong>Flood Alerts</strong><br>`;
+        const alertLevels = ['High Alert','Medium Alert','Low Alert','Rising','Falling','Stale','No Data'];
+
+        const getAlertColor = (level: string) => {
+          switch (level) {
+            case 'High Alert':    return '#FF0000';
+            case 'Medium Alert':  return '#FFA500';
+            case 'Low Alert':     return '#FFFF00';
+            case 'Rising':  return '#FF6347';
+            case 'Falling': return '#32CD32';
+            case 'Stale':   return '#A9A9A9';
+            case 'No Data': return '#808080';
+            default:        return '#808080';
+          }
+        }
+
+        for (const level of alertLevels) {
+          const color = getAlertColor(level);
+          let text_color = getTextColorBasedOnBackground(color);
+          div.innerHTML += `<i style="display: inline-block; width:100%; padding: 2px; margin: 2px 0; color:${text_color}; background: ${color}">${level}</i><br>`;
+        }
+
         return div;
       }
     }
-    const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomleft' });
+
+    class TaskProgressLegendControl extends L.Control {
+      override onAdd(map: L.Map) {
+        const div = L.DomUtil.create('div', 'info legend task-progress-legend');
+        div.style.backgroundColor = 'white';
+        div.style.padding = "6px 8px";
+        div.style.font = "14px/16px Arial, Helvetica, sans-serif";
+        div.style.borderRadius = "5px";
+        div.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.2)";
+
+        div.innerHTML = `<strong>Task Progress</strong><br>`;
+        const taskProgresses = ['Not done', 'In progress', 'Done'];
+    
+        const getTaskColor = (progress: string) => {
+          switch (progress) {
+            case 'Not done':    return '#FF1347';
+            case 'In progress': return '#2aaaFF';
+            case 'Done':        return '#00aa00';
+            default:            return '#333333';
+          }
+        }
+        
+        for (const progress of taskProgresses) {
+          const color = getTaskColor(progress);
+          let text_color = getTextColorBasedOnBackground(color);
+          div.innerHTML += `<i style="display: inline-block; width:100%; padding: 2px; margin: 2px 0; color:${text_color}; background: ${color}">${progress}</i><br>`;
+        }
+    
+        return div;
+      }
+    }
+
+    const waterLevelLegend = new WaterLevelLegendControl({ position: 'bottomright' });
+    waterLevelLegend.addTo(this.map);
+
+    const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomright' });
     floodAlertLegend.addTo(this.map);
+
+    const taskProgressLegend = new TaskProgressLegendControl({ position: 'bottomright' });
+    taskProgressLegend.addTo(this.map);
+
+
+    this.map.on('overlayadd', (event: L.LayersControlEvent) => {
+      if (event.name === 'Water Levels') {
+        waterLevelLegend.addTo(this.map);
+      } else if (event.name === 'Flood Alerts') {
+        floodAlertLegend.addTo(this.map);
+      } else if (event.name === 'Tasks') {
+        taskProgressLegend.addTo(this.map);
+      }
+    });
+  
+    this.map.on('overlayremove', (event: L.LayersControlEvent) => {
+      if (event.name === 'Water Levels') {
+        this.map.removeControl(waterLevelLegend);
+      } else if (event.name === 'Flood Alerts') {
+        this.map.removeControl(floodAlertLegend);
+      } else if (event.name === 'Tasks') {
+        this.map.removeControl(taskProgressLegend);
+      }
+    });
   }
 
   // ----------------- LOAD REPORTS  -----------------
@@ -520,7 +625,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       case 'Falling': return '#32CD32';
       case 'Stale':   return '#A9A9A9';
       case 'No Data': return '#808080';
-      default:        return '#00FF00';
+      default:        return '#808080';
     }
   }
   

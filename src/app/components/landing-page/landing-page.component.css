@@ -19,9 +19,9 @@
 }
 
 /* MAP SECTION */
-.map-section {
+/*.map-section {*/
   /* No background needed since #landing-map covers 100% anyway */
-}
+/*}*/
 
 .map-container {
   height: 100%;

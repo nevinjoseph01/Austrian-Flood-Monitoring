@@ -6,7 +6,7 @@ body {
   padding: 0;
   background-color: #1a1a1a;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #f1c40f;
+  /*color: #f1c40f;*/
 }
 
 /* Adjust content to prevent overlap with fixed footer */
