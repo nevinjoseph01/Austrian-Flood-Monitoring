@@ -110,10 +110,10 @@ h2 {
 
 .text-content p.report-verified {
   font-weight: bold;
-  color: #FF1347;
+  color: #00aa00;
 }
 
 .text-content p.report-not-verified {
   font-weight: bold;
-  color: #00aa00;
+  color: #FF1347;
 }
