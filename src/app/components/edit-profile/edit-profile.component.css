@@ -10,33 +10,8 @@
   text-align: center;
 }
 
-h2 {
-  font-size: 1.8em;
-  margin-bottom: 20px;
-}
-
-p {
-  font-size: 1.1em;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1em;
-}
-
 button {
+  margin-top: 10px;
   background-color: #f1c40f;
   color: #1a1a1a;
   border: none;
@@ -51,7 +26,8 @@ button:hover {
   background-color: #dab10f;
 }
 
-button:disabled {
-  background-color: #aaa;
-  cursor: not-allowed;
+#map {
+  margin: 20px 0;
+  border: 1px solid #333;
 }
+

@@ -94,10 +94,20 @@ export class ApiService {
     });
   }
 
-  // Update location
-  updateLocation(userId: string, location: string): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/users/${userId}/location`, { location });
+  // Update User Location
+  updateLocation(userId: string, locationData: [number, number]): Observable<any> {
+    console.log('Sending location data to API:', locationData); // Log the data being sent
+    const [latitude, longitude] = locationData;
+    const formattedData = { latitude, longitude }; // Convert array to object
+
+    let headers = this.getAuthHeaders();
+    console.log('Headers being sent:', headers);
+
+    return this.http.put<any>(`${this.baseUrl}/users/${userId}/location`, formattedData, {
+        headers,
+    });
   }
+
 
   getUsernames(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/users`);
