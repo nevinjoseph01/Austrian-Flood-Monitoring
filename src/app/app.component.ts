@@ -93,12 +93,17 @@ import { Observable } from 'rxjs';
           <!-- Geolocation Selection -->
           <label>
             Select Location on Map:
-            <div id="coords-info"></div>
-            <div id="map"></div>
+            <div id="coords-info-post"></div>
+            <div id="map_post"></div>
             <input
               type="hidden" 
-              formControlName="geolocation"
-              [value]="selectedCoordinates | json"
+              formControlName="lon"
+              [value]="selectedCoordinates[0] | json"
+            />
+            <input
+              type="hidden" 
+              formControlName="lat"
+              [value]="selectedCoordinates[1] | json"
             />
           </label>
           <div *ngIf="createPostError" class="error">
@@ -151,6 +156,22 @@ import { Observable } from 'rxjs';
               <option value="In progress">In progress</option>
               <option value="Done">Done</option>
             </select>
+          </label>
+          <!-- Geolocation Selection -->
+          <label>
+            Select Location on Map:
+            <div id="coords-info-task"></div>
+            <div id="map_task"></div>
+            <input
+              type="hidden" 
+              formControlName="lon"
+              [value]="selectedCoordinates[0] | json"
+            />
+            <input
+              type="hidden" 
+              formControlName="lat"
+              [value]="selectedCoordinates[1] | json"
+            />
           </label>
           <!-- Add file input for media attachments -->
           <label>
@@ -320,11 +341,21 @@ import { Observable } from 'rxjs';
         margin-bottom: 5px;
       }
 
-      #map {
+      #map_post {
         height: 150px;
       }
 
-      #coords-info {
+      #map_task {
+        height: 150px;
+      }
+
+      #coords-info-post {
+      margin-top: 10px; 
+      color: #f1c40f; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      #coords-info-task {
       margin-top: 10px; 
       color: #f1c40f; 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -363,7 +394,7 @@ export class AppComponent implements OnInit
   isCreatePostModalOpen = false;
   createPostForm: FormGroup;
   createPostError: string = '';
-  private map!: L.Map;
+  private map_form!: L.Map;
   selectedCoordinates: [number, number] = [0, 0];
 
   isCreateTaskModalOpen = false;
@@ -394,6 +425,8 @@ export class AppComponent implements OnInit
       description: [''],
       progress: ['Not done'],
       assignedTo: [''],
+      lat: ['', Validators.required],
+      lon: ['', Validators.required],
     });
   }
 
@@ -423,13 +456,13 @@ export class AppComponent implements OnInit
     });
   }
 
-  private mapInit() {
+  private mapInit(id_name: string, coords_info_name: string) {
     const austriaBounds = L.latLngBounds(
       [46.372276, 9.530952],
       [49.017784, 17.160776]
     );
         
-    this.map = L.map('map', {
+    this.map_form = L.map(id_name, {
       center: [47.5162, 14.5501], // Center of Austria
       zoom: 7,
       minZoom: 6,
@@ -443,14 +476,14 @@ export class AppComponent implements OnInit
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     });
-    tiles.addTo(this.map);
+    tiles.addTo(this.map_form);
     
-    L.control.scale().addTo(this.map);
+    L.control.scale().addTo(this.map_form);
     
     let marker: L.Marker;
     
     // Handle map click
-    this.map.on('click', (e: any) => {
+    this.map_form.on('click', (e: any) => {
       const { lat, lng } = e.latlng;
 
       const triangleIcon = L.divIcon({
@@ -464,21 +497,32 @@ export class AppComponent implements OnInit
       });
 
       this.selectedCoordinates = [lng, lat];
-      const InfoBox = document.getElementById("coords-info");
+      const InfoBox = document.getElementById(coords_info_name);
       if(InfoBox) {
         InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[1]}, Lon: ${this.selectedCoordinates[0]}`;
       }
 
       // Update the geolocation form control
-      this.createPostForm.get('lat')?.setValue(this.selectedCoordinates[1]);
-      this.createPostForm.get('lon')?.setValue(this.selectedCoordinates[0]);
-      this.createPostForm.get('lat')?.markAsTouched();
-      this.createPostForm.get('lon')?.markAsTouched();
+      if (this.isCreatePostModalOpen) {
+        this.createPostForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+        this.createPostForm.get('lat')?.markAsTouched();
+
+        this.createPostForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+        this.createPostForm.get('lon')?.markAsTouched();
+      } 
+      
+      if (this.isCreateTaskModalOpen) {
+        this.createTaskForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+        this.createTaskForm.get('lat')?.markAsTouched();
+
+        this.createTaskForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+        this.createTaskForm.get('lon')?.markAsTouched();
+      }
 
       if (marker) {
         marker.setLatLng([lat, lng]);
       } else {
-        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map);
+        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map_form);
       }
     });
   }
@@ -515,7 +559,7 @@ export class AppComponent implements OnInit
     this.createPostForm.reset();
     this.createPostError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
-    setTimeout(() => this.mapInit(), 0);
+    setTimeout(() => this.mapInit('map_post', "coords-info-post"), 0);
   }
 
   openCreateTaskModal() {
@@ -528,6 +572,7 @@ export class AppComponent implements OnInit
     });
     this.createTaskError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
+    setTimeout(() => this.mapInit('map_task', "coords-info-task"), 0);
   }
 
   closeCreatePostModal() {
@@ -609,6 +654,8 @@ export class AppComponent implements OnInit
       formData.append('description', this.createTaskForm.get('description')?.value || '');
       formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
       formData.append('assignedTo', this.createTaskForm.get('assignedTo')?.value || '');
+      formData.append('lat', this.createTaskForm.get('lat')?.value || '');
+      formData.append('lon', this.createTaskForm.get('lon')?.value || '');
 
       // Append selected files
       this.selectedFiles.forEach((file) => {

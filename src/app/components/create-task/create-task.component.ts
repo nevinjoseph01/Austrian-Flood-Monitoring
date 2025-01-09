@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ApiService } from '../../api.service';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-create-task',
@@ -14,6 +15,9 @@ import { CommonModule } from '@angular/common';
 export class CreateTaskComponent {
   dropdownOpen = false;
   hideNavButtons = false;
+
+  private map_form!: L.Map;
+  selectedCoordinates: [number, number] = [0, 0];
 
   isCreateTaskModalOpen = false;
   createTaskForm: FormGroup;
@@ -52,6 +56,68 @@ export class CreateTaskComponent {
     });
   }
 
+  private mapInit(id_name: string, coords_info_name: string) {
+    const austriaBounds = L.latLngBounds(
+      [46.372276, 9.530952],
+      [49.017784, 17.160776]
+    );
+        
+    this.map_form = L.map(id_name, {
+      center: [47.5162, 14.5501], // Center of Austria
+      zoom: 7,
+      minZoom: 6,
+      maxZoom: 12,
+      maxBounds: austriaBounds,
+      maxBoundsViscosity: 0.7,
+      zoomControl: false
+    });
+        
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    });
+    tiles.addTo(this.map_form);
+    
+    L.control.scale().addTo(this.map_form);
+    
+    let marker: L.Marker;
+    
+    // Handle map click
+    this.map_form.on('click', (e: any) => {
+      const { lat, lng } = e.latlng;
+
+      const triangleIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="
+        width: 0; height: 0; border-left: 
+        10px solid transparent; 
+        border-right: 10px solid transparent; 
+        border-top: 20px solid red;"></div>`,
+        iconAnchor: [10, 25],   // Positioning the triangle so that the bottom point will be where the user clicks
+      });
+
+      this.selectedCoordinates = [lng, lat];
+      const InfoBox = document.getElementById(coords_info_name);
+      if(InfoBox) {
+        InfoBox.innerHTML = `Lat: ${this.selectedCoordinates[1]}, Lon: ${this.selectedCoordinates[0]}`;
+      }
+      
+      if (this.isCreateTaskModalOpen) {
+        this.createTaskForm.get('lat')?.setValue(this.selectedCoordinates[1]);
+        this.createTaskForm.get('lat')?.markAsTouched();
+
+        this.createTaskForm.get('lon')?.setValue(this.selectedCoordinates[0]);
+        this.createTaskForm.get('lon')?.markAsTouched();
+      }
+
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        marker = L.marker([lat, lng], { icon: triangleIcon }).addTo(this.map_form);
+      }
+    });
+  }
+
   isLoggedIn(): boolean {
     return !!this.apiService.getUserId();
   }
@@ -84,6 +150,7 @@ export class CreateTaskComponent {
     });
     this.createTaskError = '';
     this.selectedFiles = []; // Reset selected files when opening the modal
+    setTimeout(() => this.mapInit('map_task', "coords-info-task"), 0);
   }
 
   closeCreateTaskModal() {
@@ -123,14 +190,15 @@ export class CreateTaskComponent {
     }
   }
 
-  submitTask() 
-  {
+  submitTask() {
     if (this.createTaskForm.valid) {
       const formData = new FormData();
       formData.append('title', this.createTaskForm.get('title')?.value);
       formData.append('description', this.createTaskForm.get('description')?.value || '');
       formData.append('progress', this.createTaskForm.get('progress')?.value || 'Not done');
       formData.append('assignedTo', this.createTaskForm.get('assignedTo')?.value || '');
+      formData.append('lat', this.createTaskForm.get('lat')?.value || '');
+      formData.append('lon', this.createTaskForm.get('lon')?.value || '');
 
       // Append selected files
       this.selectedFiles.forEach((file) => {
