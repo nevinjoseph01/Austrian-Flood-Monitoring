@@ -197,7 +197,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private preprocessReportsToGeoJSON(reports: any[]): any {
     return {
       type: "FeatureCollection",
-      features: reports.filter((report) => report.geolocation && report.geolocation.coordinates)   // && report.verified === true WHENEVER VERIFIED IS ADDED AS A FEATURE
+      features: reports.filter((report) => report.geolocation && report.geolocation.coordinates && report.verified === true)   // && report.verified === true WHENEVER VERIFIED IS ADDED AS A FEATURE
       .map((report) => ({
         type: "Feature",
         geometry: {
