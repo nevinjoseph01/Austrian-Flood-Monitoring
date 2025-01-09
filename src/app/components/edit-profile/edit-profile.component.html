@@ -1,18 +1,30 @@
 <div class="edit-profile-container">
   <h2>Edit Profile</h2>
-  <p>Here you can change your location</p>
-
-  <form [formGroup]="editProfileForm" (ngSubmit)="onSubmit()">
-    <div class="form-group">
-      <label for="location">Location</label>
-      <input
-        id="location"
-        type="text"
-        formControlName="location"
-        placeholder="Enter your location"
-      />
-    </div>
-
-    <button type="submit" [disabled]="editProfileForm.invalid">Save</button>
-  </form>
+  <div>
+    <button type="button" (click)="toggleLocationForm()">Update Location</button>
+  </div>
+  <div *ngIf="showLocationForm">
+    <form (ngSubmit)="onSubmitLocation()">
+      <div id="map" style="height: 400px;"></div>
+      <div id="coords-info">Lat: {{ selectedCoordinates[1] }}, Lon: {{ selectedCoordinates[0] }}</div>
+  
+      <input 
+        type="hidden" 
+        name="coordinates" 
+        [value]="selectedCoordinates | json" />
+  
+      <button type="submit">Save Location</button>
+    </form>
+  </div>
+  
+  
+  <!-- Error Message Section -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+  
+  <!-- Success Message Section -->
+  <div *ngIf="locationSaved" class="success-message">
+    Location updated successfully!
+  </div>
 </div>
