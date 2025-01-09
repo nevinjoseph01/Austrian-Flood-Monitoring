@@ -12,33 +12,15 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['verify-email.component.css'],
 })
 export class VerifyEmailComponent {
-  verifyForm: FormGroup;
   message: string = '';
 
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
     private router: Router
-  ) {
-    const emailFromState = this.router.getCurrentNavigation()?.extras.state?.['email'] || '';
-    this.verifyForm = this.fb.group({
-      email: [emailFromState, [Validators.required, Validators.email]],
-      verificationCode: ['', Validators.required],
-    });
-  }
+  ) {}
 
-  onSubmit() {
-    if (this.verifyForm.valid) {
-      this.apiService.verifyEmail(this.verifyForm.value).subscribe(
-        (response) => {
-          // Navigate to login page
-          this.router.navigate(['/login']);
-        },
-        (error) => {
-          console.error('Verification error:', error);
-          this.message = error.error.message || 'Verification failed';
-        }
-      );
-    }
+  goToLoginPage() {
+    this.router.navigate(['/login']);
   }
 }

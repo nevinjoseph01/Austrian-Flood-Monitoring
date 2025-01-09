@@ -1,18 +1,6 @@
 <div class="form-container">
   <h2>Email Verification</h2>
   <p>A verification code has been sent to your email. Please enter it below.</p>
-  <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()">
-    <label>
-      Email:
-      <input formControlName="email" type="email" />
-    </label>
-
-    <label>
-      Verification Code:
-      <input formControlName="verificationCode" />
-    </label>
-
-    <button type="submit" [disabled]="verifyForm.invalid">Verify Email</button>
-  </form>
+  <button (click)="goToLoginPage()">Go to login page</button>
   <div *ngIf="message" class="message">{{ message }}</div>
 </div>
