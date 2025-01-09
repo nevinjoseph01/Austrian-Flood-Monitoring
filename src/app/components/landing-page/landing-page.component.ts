@@ -54,6 +54,10 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
     this.addScaleControl();
     this.addMapClickListener();
 
+    // Add incidents to map
+    
+    // Add tasks to map
+
     // Fetch data once
     this.fetchAndUpdateWaterData();
 

@@ -38,6 +38,17 @@
           <option value="Done">Done</option>
         </select>
       </label>
+      <!-- Geolocation Selection -->
+      <label>
+        Select Location on Map:
+        <div id="coords-info-task"></div>
+        <div id="map_task"></div>
+        <input
+          type="hidden" 
+          formControlName="geolocation"
+          [value]="selectedCoordinates | json"
+        />
+      </label>
       <!-- Add file input for media attachments -->
       <label>
         Attach Media:

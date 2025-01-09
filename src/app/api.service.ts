@@ -7,7 +7,7 @@ import { environment } from '../environments/environment';
   providedIn: 'root',
 })
 export class ApiService {
-  private baseUrl = 'https://floodmonitor-backend.fly.dev/api'; // Base URL for API
+  private baseUrl = 'https://floodmonitor-backend.fly.dev/api'; //'http://localhost:3000/api'; // Base URL for API
 
   constructor(private http: HttpClient) {}
 
@@ -90,6 +90,12 @@ export class ApiService {
   // Create a new task
   createTask(taskData: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/tasks`, taskData, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  updateTask(taskId: string, taskData: any) {
+    return this.http.put<any>(`${this.baseUrl}/tasks/${taskId}/edit`, taskData, {
       headers: this.getAuthHeaders(),
     });
   }
