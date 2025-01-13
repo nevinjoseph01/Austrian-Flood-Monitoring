@@ -4,7 +4,7 @@ import { ApiService } from '../../api.service';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { getWaterData } from '../../../assets/fetch';
 import { GeoJsonGeometryTypes } from 'geojson';
 import { FeedComponent } from '../feed/feed.component';
@@ -16,6 +16,21 @@ interface FloodAlert {
   name: string;
   coords: [number, number]; // LatLngTuple
   level: string;
+}
+
+interface Measurement {
+  year: number;
+  value: number;
+}
+
+interface HistoricalData {
+  [hzbnr: string]: {
+    name: string;
+    waterBody: string;
+    catchmentArea: string;
+    operatingAuthority: string;
+    measurements: Measurement[];
+  };
 }
 
 @Component({
@@ -381,29 +396,72 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   // ----------------- DATA FETCHING -----------------
   private async fetchAndUpdateWaterData(): Promise<void> {
     try {
-      const data = await this.loadWaterLevelData();
+      const tempData = await this.loadWaterLevelData();
+      const data = await this.fetchHistWaterData(tempData);
+      // console.log(data);
       this.processWaterData(data);
     } catch (error) {
       console.error('Error fetching water level data:', error);
     }
   }
-  
+
   private setupPeriodicDataFetch(): void {
     setInterval(async () => {
       try {
-        const data = await this.loadWaterLevelData();
+        const tempData = await this.loadWaterLevelData();
+        const data = await this.fetchHistWaterData(tempData);
         this.processWaterData(data);
       } catch (error) {
         console.error('Error fetching water level data:', error);
       }
     }, 10 * 60 * 1000); // every 10 minutes
   }
-  
+
   private loadWaterLevelData(): Promise<GeoJSON.FeatureCollection> {
     // Calls your fetch function. Adjust if needed.
     return getWaterData();
   }
-  
+
+  private async fetchHistWaterData(data: any): Promise<GeoJSON.FeatureCollection> {
+    // Load the historical water data
+    const monatsmaximaData = await firstValueFrom(this.http.get<HistoricalData>("../../../assets/monatsmaxima.json"));
+    const monatsminimaData = await firstValueFrom(this.http.get<HistoricalData>("../../../assets/monatsminima.json"));
+    const tagesmittelData = await firstValueFrom(this.http.get<HistoricalData>("../../../assets/tagesmittel.json"));
+
+    // Process features
+    data.features.forEach((feature: any) => {
+      const hzbnr = feature.properties.hzbnr;
+
+      if (hzbnr && monatsmaximaData[hzbnr]) {
+        feature.properties.monatsmaxima = monatsmaximaData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
+          acc[curr.year] = curr.value;
+          return acc;
+        }, {});
+      } else if (hzbnr) {
+        feature.properties.monatsmaxima = [];
+      }
+
+      if (hzbnr && monatsminimaData[hzbnr]) {
+        feature.properties.monatsminima = monatsminimaData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
+          acc[curr.year] = curr.value;
+          return acc;
+        }, {});
+      } else if (hzbnr) {
+        feature.properties.monatsminima = [];
+      }
+
+      if (hzbnr && tagesmittelData[hzbnr]) {
+        feature.properties.tagesmittel = tagesmittelData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
+          acc[curr.year] = curr.value;
+          return acc;
+        }, {});
+      } else if (hzbnr) {
+        feature.properties.tagesmittel = [];
+      }
+    });
+    return data;
+  }
+
   private processWaterData(data: GeoJSON.FeatureCollection): void {
     // Remove existing layer if it exists
     if (this.waterLevelLayer) {
@@ -433,111 +491,139 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
             Closest body of water: ${feature.properties.area}<br>
             Last available data: ${feature.properties.timeStamp}<br>
             More details <a href='${feature.properties.detailsLink}' target='_blank'>here</a><br>
+            ${feature.properties.hzbnr ? `
+            <a href="#" class="historical-data-link" 
+                data-maxima='${JSON.stringify(feature.properties.monatsmaxima)}'
+                data-minima='${JSON.stringify(feature.properties.monatsminima)}'
+                data-mittel='${JSON.stringify(feature.properties.tagesmittel)}'>
+              Click here to see the historical water data
+            </a>` : ''}
           `);
         }
       }
     }).addTo(this.map);
 
+    // Event delegation for historical data links
+    document.body.addEventListener('click', (event) => {
+      const link = event.target as HTMLAnchorElement;
+      if (link && link.classList.contains('historical-data-link')) {
+        event.preventDefault();  // Prevent the default action (link navigation)
+        
+        // Retrieve data from the clicked link's attributes
+        const monatsmaxima = JSON.parse(link.getAttribute('data-maxima')!);
+        const monatsminima = JSON.parse(link.getAttribute('data-minima')!);
+        const tagesmittel = JSON.parse(link.getAttribute('data-mittel')!);
+        
+        // Call showHistoricalData with the data
+        this.showHistoricalData(monatsmaxima, monatsminima, tagesmittel);
+      }
+    });
+      
     // Add incidents to map
     this.loadReports();
     // Add tasks to map
     this.loadTasks();
     // Add flood alerts to map
     this.updateFloodAlerts();
-    // Here display hist water data REDO!!!
-    // this.addLayerControl();
   }
-  
-  // ------------- HISTORICAL WATER DATA ------------
 
-  private async setupHistWaterData(file_counter: number): Promise<void> {
-    try {
-      //this.loadHistWaterLevelData().subscribe((data) => {
-      if (this.histWaterLevelLayer) {
-        this.map.removeLayer(this.histWaterLevelLayer);
-      }
-
-      // Original GeoJSON object
-      this.http.get<GeoJSON.FeatureCollection>(`assets/HistWater_${file_counter}.geojson`).subscribe((data: GeoJSON.FeatureCollection) => {
-        const simplifiedData = turf.simplify(data, { tolerance: 0.01 });
-        this.processHistWaterData(simplifiedData);
-      });
-
-      
-
-    } catch (error) {
-      console.error('Error fetching historical water level data:', error);
-    }
-  }
-  
-  // Reproject GeoJSON coordinates from EPSG:3035 to EPSG:4326
-  private processHistWaterData(data: GeoJSON.FeatureCollection) {
-    // Define EPSG:3035 projection
-    proj4.defs(
-      "EPSG:3035",
-      "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs"
-    );
-
-    const reprojectedGeoJSON: GeoJSON.FeatureCollection = {
-      ...data,
-      features: data.features.map((feature) => {
-        if (feature.geometry.type === "Polygon") {
-          // Reproject Polygon coordinates
-          const reprojectedCoordinates = feature.geometry.coordinates.map((ring) =>
-            ring.map((coord) => {
-              const [x, y] = proj4("EPSG:3035", "EPSG:4326", [coord[1], coord[0]]); // Swap before reprojection
-              return [x, y]; // Flip back after reprojection
-            })
-          );
-          return {
-            ...feature,
-            geometry: {
-              ...feature.geometry,
-              coordinates: reprojectedCoordinates,
-            },
-          };
-        } else if (feature.geometry.type === "MultiPolygon") {
-          // Reproject MultiPolygon coordinates
-          const reprojectedCoordinates = feature.geometry.coordinates.map((polygon) =>
-            polygon.map((ring) =>
-              ring.map((coord) => {
-                const [x, y] = proj4("EPSG:3035", "EPSG:4326", [coord[1], coord[0]]); // Swap before reprojection
-                return [y, x]; // Flip back after reprojection
-              })
-            )
-          );
-          return {
-            ...feature,
-            geometry: {
-              ...feature.geometry,
-              coordinates: reprojectedCoordinates,
-            },
-          };
+  showHistoricalData(monatsmaxima: any, monatsminima: any, tagesmittel: any): void {
+    // Check if all three parameters are empty lists
+    if (
+      Array.isArray(monatsmaxima) && monatsmaxima.length === 0 &&
+      Array.isArray(monatsminima) && monatsminima.length === 0 &&
+      Array.isArray(tagesmittel) && tagesmittel.length === 0
+    ) {
+        // If all lists are empty, show a message instead of the table
+        const win = window.open("", "Historical Data", "width=800,height=600");
+        if (win) {
+            win.document.write(`
+                <html>
+                    <head>
+                        <title>Historical Water Data</title>
+                        <style>
+                          body {
+                            font-family: Arial, sans-serif;
+                            background-color: #000000;
+                            padding: 20px;
+                          }
+                          h1, p {
+                            color: #f1c40f;
+                          }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Historical Water Data</h1>
+                        <p>There is no data available for this feature.</p>
+                    </body>
+                </html>
+            `);
+            win.document.close();
         }
-        // Return the feature unchanged if it's not a Polygon or MultiPolygon
-        return feature;
-      }) as GeoJSON.Feature<GeoJSON.Geometry, GeoJSON.GeoJsonProperties>[], // Explicitly cast to the correct type
-    };
+    } else {
 
-    // Add reprojected GeoJSON to the map
-    this.histWaterLevelLayer = L.geoJSON(reprojectedGeoJSON, {
-      style: (feature) => ({
-        color: "red", // Set the outline color
-        weight: 2, // Set the outline width
-        fillColor: "orange", // Set the fill color
-        fillOpacity: 0.5, // Set the fill transparency
-      }),
-      onEachFeature: (feature, layer) => {
-        // Bind a popup with properties
-        // console.log(feature.properties.returnPeriod);
-        const { gml_id, localId, returnPeriod } = feature.properties;
-        layer.bindPopup(`
-          <strong>${gml_id}</strong><br>
-          Local ID: ${localId}<br>
-          Return Period: ${returnPeriod}
+      // Create a new window for the historical data
+      const win = window.open("", "Historical Data", "width=700,height=1000");
+      if (win) {
+        win.document.write(`
+          <html>
+            <head>
+              <title>Historical Water Data</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  background-color: #000000;
+                  padding: 20px;
+                }
+                h1 {
+                  color: #f1c40f;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  margin-top: 20px;
+                }
+                table th, table td {
+                  padding: 8px;
+                  text-align: left;
+                  color: #f1c40f;
+                }
+                table th {
+                  background-color: #222222;
+                }
+                table tr:nth-child(even) {
+                  background-color: #333333;
+                }
+              </style>
+            </head>
+            <body>
+              <h1>Historical Water Data</h1><hr>
+              <table border="1" class = "histwatertable">
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>Monatsmaxima</th>
+                    <th>Monatsminima</th>
+                    <th>Tagesmittel</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.keys(monatsmaxima).map(year => `
+                    <tr>
+                      <td>${year}</td>
+                      <td>${monatsmaxima[year] ?? "N/A"}</td>
+                      <td>${monatsminima[year] ?? "N/A"}</td>
+                      <td>${tagesmittel[year] ?? "N/A"}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </body>
+          </html>
         `);
-      },
-    }).addTo(this.map);
+        win.document.close();
+      }
+    }
   }
 
   // ----------------- FLOOD ALERTS -----------------

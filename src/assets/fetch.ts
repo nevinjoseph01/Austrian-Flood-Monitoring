@@ -1,5 +1,6 @@
 interface FeatureProperties {
     messstelle: string;
+    hzbnr: number;
     gewaesser: string;
     wert: string;
     zeitpunkt: string;
@@ -22,6 +23,7 @@ interface GeoJSONFeature {
     properties: {
         name: string;
         waterLevel: number;
+        hzbnr: number;
         area: string;
         timeStamp: string;
         riskLevel: number;
@@ -68,6 +70,7 @@ async function loadWaterData(): Promise<GeoJSON> {
                 properties: {
                     name: feature.properties.messstelle,         // Nearest Area/City
                     waterLevel: parseFloat(feature.properties.wert), // Water level as float
+                    hzbnr: feature.properties.hzbnr,
                     area: feature.properties.gewaesser,          // Nearest body of water
                     timeStamp: feature.properties.zeitpunkt,     // Time when the data was collected
                     riskLevel: feature.properties.gesamtcode,    // Risk level as an integer
