@@ -433,7 +433,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       const hzbnr = feature.properties.hzbnr;
 
       if (hzbnr && monatsmaximaData[hzbnr]) {
-        feature.properties.monatsmaxima = monatsmaximaData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
+        feature.properties.monatsmaxima = feature.properties.monatsmaxima || {};
+        feature.properties.monatsmaxima.name = monatsmaximaData[hzbnr].name??NaN;
+        feature.properties.monatsmaxima.waterBody = monatsmaximaData[hzbnr].waterBody??NaN;
+        feature.properties.monatsmaxima.catchmentArea = monatsmaximaData[hzbnr].catchmentArea??NaN;
+        feature.properties.monatsmaxima.operatingAuthority = monatsmaximaData[hzbnr].operatingAuthority??NaN;
+        feature.properties.monatsmaxima.measurements = monatsmaximaData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
           acc[curr.year] = curr.value;
           return acc;
         }, {});
@@ -442,7 +447,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       }
 
       if (hzbnr && monatsminimaData[hzbnr]) {
-        feature.properties.monatsminima = monatsminimaData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
+        feature.properties.monatsminima = feature.properties.monatsminima || {};
+        feature.properties.monatsminima.name = monatsminimaData[hzbnr].name;
+        feature.properties.monatsminima.waterBody = monatsminimaData[hzbnr].waterBody;
+        feature.properties.monatsminima.catchmentArea = monatsminimaData[hzbnr].catchmentArea;
+        feature.properties.monatsminima.operatingAuthority = monatsminimaData[hzbnr].operatingAuthority;
+        feature.properties.monatsminima.measurements = monatsminimaData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
           acc[curr.year] = curr.value;
           return acc;
         }, {});
@@ -451,7 +461,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       }
 
       if (hzbnr && tagesmittelData[hzbnr]) {
-        feature.properties.tagesmittel = tagesmittelData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
+        feature.properties.tagesmittel = feature.properties.tagesmittel || {};
+        feature.properties.tagesmittel.name = tagesmittelData[hzbnr].name;
+        feature.properties.tagesmittel.waterBody = tagesmittelData[hzbnr].waterBody;
+        feature.properties.tagesmittel.catchmentArea = tagesmittelData[hzbnr].catchmentArea;
+        feature.properties.tagesmittel.operatingAuthority = tagesmittelData[hzbnr].operatingAuthority;
+        feature.properties.tagesmittel.measurements = tagesmittelData[hzbnr].measurements.reduce((acc: any, curr: Measurement) => {
           acc[curr.year] = curr.value;
           return acc;
         }, {});
@@ -529,11 +544,15 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
 
   showHistoricalData(monatsmaxima: any, monatsminima: any, tagesmittel: any): void {
     // Check if all three parameters are empty lists
-    if (
+    if ((
       Array.isArray(monatsmaxima) && monatsmaxima.length === 0 &&
       Array.isArray(monatsminima) && monatsminima.length === 0 &&
       Array.isArray(tagesmittel) && tagesmittel.length === 0
-    ) {
+    ) || (
+      Array.isArray(monatsmaxima.measurements) && monatsmaxima.length === 0 &&
+      Array.isArray(monatsminima.measurements) && monatsminima.length === 0 &&
+      Array.isArray(tagesmittel.measurements) && tagesmittel.length === 0
+    )){
         // If all lists are empty, show a message instead of the table
         const win = window.open("", "Historical Data", "width=800,height=600");
         if (win) {
@@ -594,10 +613,18 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
                 table tr:nth-child(even) {
                   background-color: #333333;
                 }
+                .information-box {
+                  color: #f1c40f;
+                }
               </style>
             </head>
             <body>
-              <h1>Historical Water Data</h1><hr>
+              <h1>Historical Water Data of ${monatsmaxima.name}</h1>
+              <div class = "information-box">
+                <p>Body of water: ${monatsmaxima.waterBody}</p>
+                <p>Catchment area: ${monatsmaxima.catchmentArea}</p>
+                <p>Operating authority: ${monatsmaxima.operatingAuthority}</p>
+              </div><hr>
               <table border="1" class = "histwatertable">
                 <thead>
                   <tr>
@@ -608,12 +635,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
                   </tr>
                 </thead>
                 <tbody>
-                  ${Object.keys(monatsmaxima).map(year => `
+                  ${Object.keys(monatsmaxima.measurements).map(year => `
                     <tr>
                       <td>${year}</td>
-                      <td>${monatsmaxima[year] ?? "N/A"}</td>
-                      <td>${monatsminima[year] ?? "N/A"}</td>
-                      <td>${tagesmittel[year] ?? "N/A"}</td>
+                      <td>${monatsmaxima.measurements[year] ?? "N/A"}</td>
+                      <td>${monatsminima.measurements[year] ?? "N/A"}</td>
+                      <td>${tagesmittel.measurements[year] ?? "N/A"}</td>
                     </tr>
                   `).join("")}
                 </tbody>
