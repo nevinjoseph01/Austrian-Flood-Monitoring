@@ -28,7 +28,7 @@ import { Observable } from 'rxjs';
       <nav class="navigation" *ngIf="!hideNavButtons">
         <div *ngIf="isLoggedIn()" class="dropdown">
           <button class="nav-button dropdown-toggle" (click)="toggleDropdown()">
-            <i class="fas fa-cog"></i> <!-- Gear icon -->
+            <i class="fas fa-plus"></i> <!-- Gear icon -->
           </button>
           <div class="dropdown-menu" [class.show]="dropdownOpen">
             <a class="dropdown-item" [routerLink]="['/welcome', getUsername()]">Home</a>
@@ -51,9 +51,11 @@ import { Observable } from 'rxjs';
               Create Task
             </a>
             <a class="dropdown-item" routerLink="/edit-profile">Edit Profile</a>
-            <a class="dropdown-item" (click)="logout()">Logout</a>
           </div>
         </div>
+        <button *ngIf="isLoggedIn()" class="nav-button logout-button" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> <!-- Logout icon -->
+        </button>
       </nav>
     </app-header>
     <div class="content">
@@ -208,6 +210,17 @@ import { Observable } from 'rxjs';
         cursor: pointer;
         display: flex;
         align-items: flex-end;
+      }
+      .logout-button {
+        margin-left: 10px;
+        background-color: #1a1a1a;
+        color: #f1c40f;
+        border: none;
+        padding: 10px;
+        font-size: 18px;
+        cursor: pointer;
+        display: inline-block; /* Ensure it aligns with other inline elements */
+        vertical-align: middle; /* Align vertically with other elements */
       }
 
       .dropdown {
