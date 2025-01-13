@@ -200,27 +200,25 @@ import { Observable } from 'rxjs';
     <app-footer></app-footer>
   `,
   styles: [
-    `
-      .nav-button {
+    ` .nav-button {
         background-color: #1a1a1a;
         color: #f1c40f;
         border: none;
-        padding: 10px;
-        font-size: 24px;
+        font-size: 20px; /* Adjust font size for consistency */
         cursor: pointer;
-        display: flex;
-        align-items: flex-end;
+        display: inline-flex; /* Align buttons inline */
+        justify-content: center; /* Center the content inside the button */
+        align-items: center; /* Vertically align the content */
+        width: 40px; /* Ensure equal width for all buttons */
+        height: 40px; /* Ensure equal height for all buttons */
+        border-radius: 5px; /* Optional: Add rounded corners */
+        margin-left: 10px; /* Add spacing between buttons */
       }
       .logout-button {
-        margin-left: 10px;
-        background-color: #1a1a1a;
-        color: #f1c40f;
-        border: none;
-        padding: 10px;
-        font-size: 18px;
-        cursor: pointer;
-        display: inline-block; /* Ensure it aligns with other inline elements */
-        vertical-align: middle; /* Align vertically with other elements */
+        margin-left: 10px; /* Consistent spacing */
+      }
+      .nav-button:hover {
+        background-color: #333333;
       }
 
       .dropdown {
