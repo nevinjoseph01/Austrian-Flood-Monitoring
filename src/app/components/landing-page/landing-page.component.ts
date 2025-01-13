@@ -251,22 +251,16 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
     waterLevelLegend.addTo(this.map);
 
     const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomright' });
-    floodAlertLegend.addTo(this.map);
+    // floodAlertLegend.addTo(this.map);
 
 
-    this.map.on('overlayadd', (event: L.LayersControlEvent) => {
+    this.map.on('baselayerchange', (event: L.LayersControlEvent) => {
       if (event.name === 'Water Levels') {
         waterLevelLegend.addTo(this.map);
+        this.map.removeControl(floodAlertLegend);
       } else if (event.name === 'Flood Alerts') {
         floodAlertLegend.addTo(this.map);
-      }
-    });
-  
-    this.map.on('overlayremove', (event: L.LayersControlEvent) => {
-      if (event.name === 'Water Levels') {
         this.map.removeControl(waterLevelLegend);
-      } else if (event.name === 'Flood Alerts') {
-        this.map.removeControl(floodAlertLegend);
       }
     });
   }
@@ -601,11 +595,27 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
 
   // ----------------- LAYER CONTROL -----------------
   private addLayerControl(): void {
-    const overlayMaps = {
-      'Water Levels': this.waterLevelLayer,
-      'Flood Alerts': this.floodAlertLayer
+    const waterLevelsGroup = L.layerGroup([this.waterLevelLayer]);
+    const floodAlertsGroup = L.layerGroup([this.floodAlertLayer]);
+
+    // Add the groups to the map as base layers
+    const baseLayers = {
+      'Water Levels': waterLevelsGroup,
+      'Flood Alerts': floodAlertsGroup
     };
-    L.control.layers({}, overlayMaps).addTo(this.map);
+
+    // Start with a clean slate 🧹🧹
+    Object.values([this.waterLevelLayer, this.floodAlertLayer]).forEach((layer) => {
+      this.map.removeLayer(layer);
+    });
+
+    // Current water levels should be the first group displayed
+    this.map.addLayer(waterLevelsGroup);
+
+    // Creating layer control
+    const layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+
+    this.map.addControl(layerControl);
   }
 
   // ----------------- COLOR HELPERS -----------------

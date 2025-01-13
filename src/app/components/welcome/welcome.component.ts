@@ -256,28 +256,28 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     waterLevelLegend.addTo(this.map);
 
     const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomright' });
-    floodAlertLegend.addTo(this.map);
+    // floodAlertLegend.addTo(this.map);
 
     const taskProgressLegend = new TaskProgressLegendControl({ position: 'bottomright' });
-    taskProgressLegend.addTo(this.map);
+    // taskProgressLegend.addTo(this.map);
 
 
-    this.map.on('overlayadd', (event: L.LayersControlEvent) => {
+    this.map.on('baselayerchange', (event: L.LayersControlEvent) => {
       if (event.name === 'Water Levels') {
         waterLevelLegend.addTo(this.map);
+        this.map.removeControl(floodAlertLegend);
+        this.map.removeControl(taskProgressLegend);
       } else if (event.name === 'Flood Alerts') {
         floodAlertLegend.addTo(this.map);
+        this.map.removeControl(waterLevelLegend);
+        this.map.removeControl(taskProgressLegend);
       } else if (event.name === 'Tasks') {
         taskProgressLegend.addTo(this.map);
-      }
-    });
-  
-    this.map.on('overlayremove', (event: L.LayersControlEvent) => {
-      if (event.name === 'Water Levels') {
         this.map.removeControl(waterLevelLegend);
-      } else if (event.name === 'Flood Alerts') {
         this.map.removeControl(floodAlertLegend);
-      } else if (event.name === 'Tasks') {
+      } else if (event.name === 'Reports') {
+        this.map.removeControl(waterLevelLegend);
+        this.map.removeControl(floodAlertLegend);
         this.map.removeControl(taskProgressLegend);
       }
     });
@@ -725,13 +725,31 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   
   // ----------------- LAYER CONTROL -----------------
   private addLayerControl(): void {
-    const overlayMaps = {
-      'Reports': this.reportLayer,
-      'Tasks': this.taskLayer,
-      'Water Levels': this.waterLevelLayer,
-      'Flood Alerts': this.floodAlertLayer
+    const waterLevelsGroup = L.layerGroup([this.waterLevelLayer]);
+    const floodAlertsGroup = L.layerGroup([this.floodAlertLayer]);
+    const reportsGroup = L.layerGroup([this.reportLayer]);
+    const tsksGroup = L.layerGroup([this.taskLayer]);
+
+    // Add the groups to the map as base layers
+    const baseLayers = {
+      'Water Levels': waterLevelsGroup,
+      'Flood Alerts': floodAlertsGroup,
+      'Reports': reportsGroup,
+      'Tasks': tsksGroup
     };
-    L.control.layers({}, overlayMaps).addTo(this.map);
+
+    // Start with a clean slate 🧹🧹
+    Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
+      this.map.removeLayer(layer);
+    });
+
+    // Current water levels should be the first group displayed
+    this.map.addLayer(waterLevelsGroup);
+
+    // Creating layer control
+    const layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+
+    this.map.addControl(layerControl);
   }
   
   // ----------------- COLOR HELPERS -----------------
