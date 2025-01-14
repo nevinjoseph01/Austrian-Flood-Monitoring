@@ -258,7 +258,8 @@ import { Observable } from 'rxjs';
       }
 
       .content {
-        padding-top: 50px;
+        padding-top: 80px;
+        padding-bottom: 0px;
         min-height: calc(100vh - 160px); /* Adjust based on header and footer height */
       }
 
