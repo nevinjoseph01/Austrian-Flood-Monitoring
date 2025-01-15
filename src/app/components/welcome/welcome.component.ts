@@ -45,6 +45,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private userId: string | null = null;
 
   private map!: L.Map;
+  private layerControl!: L.Control<any>;
   private reportLayer!: L.LayerGroup<any>;
   private taskLayer!: L.LayerGroup<any>;
   private waterLevelLayer!: L.GeoJSON<any>;
@@ -81,10 +82,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
 
     // (Optional) Periodic refresh every 10 minutes
     this.setupPeriodicDataFetch();
-
-    setTimeout(() => {
-      this.addLayerControl(); // Ensure layers are ready before adding control
-  }, 1000); // Adjust delay as necessary
   }
 
   // ----------------- MAP INITIALIZATION -----------------
@@ -433,6 +430,16 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   private setupPeriodicDataFetch(): void {
     setInterval(async () => {
       try {
+        // Remove legend control
+        if (this.layerControl) {
+          this.map.removeControl(this.layerControl);
+        }
+        // Remove layers if they exist
+        Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
+          if (layer) {
+            this.map.removeLayer(layer);
+          }
+        });
         const tempData = await this.loadWaterLevelData();
         const data = await this.fetchHistWaterData(tempData);
         this.processWaterData(data);
@@ -503,11 +510,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   }
 
   private processWaterData(data: GeoJSON.FeatureCollection): void {
-    // Remove existing layer if it exists
-    if (this.waterLevelLayer) {
-      this.map.removeLayer(this.waterLevelLayer);
-    }
-
     // Create new water level layer
     this.waterLevelLayer = L.geoJSON(data, {
       pointToLayer: (feature, latlng) => {
@@ -565,6 +567,10 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     this.loadTasks();
     // Add flood alerts to map
     this.updateFloodAlerts();
+
+    setTimeout(() => {
+      this.addLayerControl(); // Ensure layers are ready before adding control
+    }, 1000);
   }
 
   showHistoricalData(monatsmaxima: any, monatsminima: any, tagesmittel: any): void {
@@ -722,9 +728,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   }
   
   private updateFloodAlerts(): void {
-    if (this.floodAlertLayer) {
-      this.map.removeLayer(this.floodAlertLayer);
-    }
     this.floodAlertLayer = L.layerGroup();
 
     this.floodAlerts.forEach((alert) => {
@@ -772,9 +775,9 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     this.map.addLayer(waterLevelsGroup);
 
     // Creating layer control
-    const layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
-
-    this.map.addControl(layerControl);
+    this.layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+    
+    this.map.addControl(this.layerControl);
   }
   
   // ----------------- COLOR HELPERS -----------------

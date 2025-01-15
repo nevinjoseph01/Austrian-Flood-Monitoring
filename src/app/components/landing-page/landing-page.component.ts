@@ -55,6 +55,7 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
   constructor(private http: HttpClient) {}
 
   private map!: L.Map;
+  private layerControl!: L.Control<any>;
   private waterLevelLayer!: L.GeoJSON<any>;
   private histWaterLevelLayer!: L.GeoJSON<any>;
   private floodAlertLayer!: L.LayerGroup<any>;
@@ -280,6 +281,16 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
   private setupPeriodicDataFetch(): void {
     setInterval(async () => {
       try {
+        // Remove legend control
+        if (this.layerControl) {
+          this.map.removeControl(this.layerControl);
+        }
+        // Remove layers if they exist
+        Object.values([this.waterLevelLayer, this.floodAlertLayer]).forEach((layer) => {
+          if (layer) {
+            this.map.removeLayer(layer);
+          }
+        });
         const tempData = await this.loadWaterLevelData();
         const data = await this.fetchHistWaterData(tempData);
         this.processWaterData(data);
@@ -350,11 +361,6 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
   }
 
   private processWaterData(data: GeoJSON.FeatureCollection): void {
-    // Remove existing layer if it exists
-    if (this.waterLevelLayer) {
-      this.map.removeLayer(this.waterLevelLayer);
-    }
-
     // Create new water level layer
     this.waterLevelLayer = L.geoJSON(data, {
       pointToLayer: (feature, latlng) => {
@@ -567,9 +573,6 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
   }
 
   private updateFloodAlerts(): void {
-    if (this.floodAlertLayer) {
-      this.map.removeLayer(this.floodAlertLayer);
-    }
     this.floodAlertLayer = L.layerGroup();
 
     this.floodAlerts.forEach((alert) => {
@@ -613,9 +616,9 @@ export class LandingPageComponent implements OnInit, AfterViewInit {
     this.map.addLayer(waterLevelsGroup);
 
     // Creating layer control
-    const layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+    this.layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
 
-    this.map.addControl(layerControl);
+    this.map.addControl(this.layerControl);
   }
 
   // ----------------- COLOR HELPERS -----------------
