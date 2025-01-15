@@ -2,29 +2,82 @@
   <h2>Edit Profile</h2>
   <div>
     <button type="button" (click)="toggleLocationForm()">Update Location</button>
+    <br>
+    <button type="button" (click)="openPwdForm()">Update Password</button>
   </div>
-  <div *ngIf="showLocationForm">
-    <form (ngSubmit)="onSubmitLocation()">
-      <div id="map" style="height: 400px;"></div>
-      <div id="coords-info">Lat: {{ selectedCoordinates[1] }}, Lon: {{ selectedCoordinates[0] }}</div>
-  
-      <input 
-        type="hidden" 
-        name="coordinates" 
-        [value]="selectedCoordinates | json" />
-  
-      <button type="submit">Save Location</button>
-    </form>
+  <div>
+    <div *ngIf="showLocationForm">
+      <form (ngSubmit)="onSubmitLocation()">
+        <div id="map" style="height: 400px;"></div>
+        <div id="coords-info">Lat: {{ selectedCoordinates[1] }}, Lon: {{ selectedCoordinates[0] }}</div>
+    
+        <input 
+          type="hidden" 
+          name="coordinates" 
+          [value]="selectedCoordinates | json" />
+    
+        <button type="submit">Save Location</button>
+      </form>
+    </div>
+    <!-- Error Message Section -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    <!-- Success Message Section -->
+    <div *ngIf="locationSaved" class="success-message">
+      Location updated successfully!
+    </div>
   </div>
+
+  <div *ngIf="showPwdForm" class="modal-overlay" (click)="closePwdForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Update Password</h2>
+      <form [formGroup]="updatePwdForm" (ngSubmit)="onSubmitPassword()">
+        <label class="form-label">
+          Old Password:
+          <input formControlName="oldpass" class="form-input" />
+        </label>
+        <div
+          class="error"
+          *ngIf="updatePwdForm.get('oldpass')?.invalid && updatePwdForm.get('oldpass')?.touched"
+        >
+          The old password is required.
+        </div>
   
+        <label class="form-label">
+          New Password:
+          <input formControlName="newpass1" class="form-input" />
+        </label>
+        <div
+          class="error"
+          *ngIf="updatePwdForm.get('newpass1')?.invalid && updatePwdForm.get('newpass1')?.touched"
+        >
+          The new password is required.
+        </div>
   
-  <!-- Error Message Section -->
-  <div *ngIf="errorMessage" class="error-message">
-    {{ errorMessage }}
-  </div>
+        <label class="form-label">
+          Confirm New Password:
+          <input formControlName="newpass2" class="form-input" />
+        </label>
+        <div
+          class="error"
+          *ngIf="updatePwdForm.get('newpass2')?.invalid && updatePwdForm.get('newpass2')?.touched"
+        >
+          Confirmation of the new password is required.
+        </div>
   
-  <!-- Success Message Section -->
-  <div *ngIf="locationSaved" class="success-message">
-    Location updated successfully!
-  </div>
+        <div *ngIf="updatePwdError" class="error">
+          {{ updatePwdError }}
+        </div>
+        <div *ngIf="pwdSaved" class="success-message">
+          Password updated successfully!
+        </div>
+  
+        <div class="modal-actions">
+          <button type="submit" class="action-button">Save Password</button>
+          <button type="button" (click)="closePwdForm()" class="action-button">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>  
 </div>

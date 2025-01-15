@@ -31,3 +31,87 @@ button:hover {
   border: 1px solid #333;
 }
 
+/* Modal Overlay and Content */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 500px;
+  color: #f1c40f;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+/* Form Labels and Inputs */
+.form-label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.form-input {
+  width: 96.5%;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  background-color: #333;
+  color: #f1c40f;
+  font-size: 1em;
+  margin-top: 5px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #f1c40f;
+}
+
+/* Error and Success Messages */
+.error {
+  color: #e74c3c;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.success-message {
+  color: #27ae60;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+/* Buttons */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.action-button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  background-color: #f1c40f;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.action-button:hover {
+  background-color: #d4ac0d;
+}

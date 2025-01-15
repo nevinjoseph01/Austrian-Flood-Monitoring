@@ -27,10 +27,11 @@ export class ApiService {
   }
 
   // Store user credentials in localStorage
-  storeUserCredentials(userId: string, userRole: string, username: string, geolocation: any) {
+  storeUserCredentials(userId: string, userRole: string, username: string, userpwd: string) {
     localStorage.setItem('userId', userId);
     localStorage.setItem('userRole', userRole);
     localStorage.setItem('username', username);
+    localStorage.setItem('userpwd', userpwd);
   }
 
   // Retrieve user credentials from localStorage
@@ -46,11 +47,16 @@ export class ApiService {
     return localStorage.getItem('username');
   }
 
+  getUserpwd(): string | null {
+    return localStorage.getItem('userpwd');
+  }
+
   // Logout method
   logout() {
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
     localStorage.removeItem('username');
+    localStorage.removeItem('userpwd');
   }
 
   // Method to make authenticated requests
@@ -101,14 +107,17 @@ export class ApiService {
     });
   }
 
-  // Update User Location
+  updatePassword(userId: string, newPassword: string) {
+    return this.http.put<any>(`${this.baseUrl}/users/${userId}/pwd`, {newPassword}, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
   updateLocation(userId: string, locationData: [number, number]): Observable<any> {
-    console.log('Sending location data to API:', locationData); // Log the data being sent
     const [latitude, longitude] = locationData;
     const formattedData = { latitude, longitude }; // Convert array to object
 
     let headers = this.getAuthHeaders();
-    console.log('Headers being sent:', headers);
 
     return this.http.put<any>(`${this.baseUrl}/users/${userId}/location`, formattedData, {
         headers,

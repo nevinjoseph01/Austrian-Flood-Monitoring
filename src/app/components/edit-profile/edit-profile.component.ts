@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../api.service'; // Import ApiService
-import { Router } from '@angular/router'; // Import Router
-import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router'; // Import Router
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 
@@ -10,27 +10,57 @@ import * as L from 'leaflet';
   templateUrl: './edit-profile.component.html',
   styleUrls: ['./edit-profile.component.css'],
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule],
 })
 export class EditProfileComponent implements OnInit {
+  private userId: string | null = null;
   showLocationForm = false;
+  showPwdForm = false;
   selectedCoordinates: [number, number] = [0, 0];
   private map!: L.Map;
   locationSaved: boolean = false; // Flag for successful save
+  pwdSaved: boolean = false; // Flag for successful save
   errorMessage: string | null = null; // Error message if saving fails
 
-  constructor(
-    private apiService: ApiService, // Inject ApiService
-    private router: Router // Inject Router (optional for redirection)
-  ) {}
+  updatePwdError: string = '';
+  updatePwdForm: FormGroup;
 
-  ngOnInit(): void {}
+  constructor(
+    private route: ActivatedRoute,
+    private apiService: ApiService, // Inject ApiService
+    private router: Router, // Inject Router (optional for redirection)
+    private fb: FormBuilder
+  ) {
+    this.updatePwdForm = this.fb.group({
+      oldpass: ['', Validators.required],
+      newpass1: ['', Validators.required],
+      newpass2: ['', Validators.required],
+    });
+  }
+
+  ngOnInit(): void {
+    this.userId = this.apiService.getUserId();
+    if (!this.userId) {
+      // User is not logged in or URL does not match logged-in user, redirect to login
+      this.router.navigate(['/login']);
+    }
+  }
 
   toggleLocationForm() {
     this.showLocationForm = !this.showLocationForm;
     if (this.showLocationForm) {
       setTimeout(() => this.initMap(), 0);
     }
+  }
+
+  openPwdForm() {
+    this.showPwdForm = true;
+    this.updatePwdForm.reset();
+    this.updatePwdError = '';
+  }
+
+  closePwdForm() {
+    this.showPwdForm = false;
   }
 
   private initMap() {
@@ -89,31 +119,58 @@ export class EditProfileComponent implements OnInit {
     // Validate the coordinates
     if (isNaN(lat) || isNaN(lon)) {
       this.errorMessage = 'Invalid coordinates';
-      console.log('Invalid coordinates:', lat, lon);
       return;
     }
   
-    const userId = this.apiService.getUserId(); // Get the user ID from ApiService
-    if (!userId) {
+    if (!this.userId) {
       this.errorMessage = 'User not logged in.';
-      console.log('User not logged in.');
       return;
     }
-  
-    console.log('Valid coordinates:', lon, lat);  // Ensure correct order
   
     // Call the API to save the location
-    this.apiService.updateLocation(userId, [lon, lat]).subscribe(
+    this.apiService.updateLocation(this.userId, [lon, lat]).subscribe(
       (response) => {
         this.locationSaved = true; // Flag for success
         this.errorMessage = null; // Clear previous error messages
-        console.log('Location updated successfully:', response);
         alert('Location updated successfully!');
       },
       (error) => {
         this.locationSaved = false; // Flag for failure
         this.errorMessage = error.error.message || 'Failed to update location.';
-        console.error('Error updating location:', error);
+      }
+    );
+  }  
+
+  // Function that gets called when the user submits the location
+  onSubmitPassword() {
+    if (!this.userId) {
+      this.updatePwdError = 'User not logged in.';
+      return;
+    }
+
+    if (this.updatePwdForm.get('oldpass')?.value != this.apiService.getUserpwd()) {
+      this.updatePwdError = 'The old password is incorrect.';
+      return;
+    }
+    
+    if (this.updatePwdForm.get('newpass1')?.value != this.updatePwdForm.get('newpass2')?.value) {
+      this.updatePwdError = 'The two new passwords must match.';
+      return;
+    }
+
+    const newPassword = this.updatePwdForm.get('newpass1')?.value;
+  
+    // Call the API to save the location
+    this.apiService.updatePassword(this.userId, String(newPassword)).subscribe(
+      (response) => {
+        this.pwdSaved = true; // Flag for success
+        this.updatePwdError = ''; // Clear previous error messages
+        alert('Password updated successfully!');
+      },
+      (error) => {
+        console.error('Error updating password:', error);
+        // Show error message
+        this.updatePwdError = error.error.message || 'Failed to update password.';
       }
     );
   }  
