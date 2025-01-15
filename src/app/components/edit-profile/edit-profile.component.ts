@@ -33,8 +33,14 @@ export class EditProfileComponent implements OnInit {
   ) {
     this.updatePwdForm = this.fb.group({
       oldpass: ['', Validators.required],
-      newpass1: ['', Validators.required],
-      newpass2: ['', Validators.required],
+      newpass1: ['', 
+        Validators.required,
+        Validators.pattern('(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&].{8,}')
+      ],
+      newpass2: ['', 
+        Validators.required,
+        Validators.pattern('(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&].{8,}')
+      ],
     });
   }
 
@@ -149,12 +155,16 @@ export class EditProfileComponent implements OnInit {
     }
 
     if (this.updatePwdForm.get('oldpass')?.value != this.apiService.getUserpwd()) {
-      this.updatePwdError = 'The old password is incorrect.';
+      if (this.updatePwdForm.get('oldpass')?.valid) {
+        this.updatePwdError = 'The old password is incorrect.';
+      }
       return;
     }
-    
+
     if (this.updatePwdForm.get('newpass1')?.value != this.updatePwdForm.get('newpass2')?.value) {
-      this.updatePwdError = 'The two new passwords must match.';
+      if (this.updatePwdForm.get('newpass1')?.valid && this.updatePwdForm.get('newpass2')?.valid) {
+        this.updatePwdError = 'The two new passwords must match.';
+      }
       return;
     }
 

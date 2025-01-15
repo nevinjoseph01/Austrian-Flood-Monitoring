@@ -29,13 +29,13 @@
     </div>
   </div>
 
-  <div *ngIf="showPwdForm" class="modal-overlay" (click)="closePwdForm()">
+  <div *ngIf="showPwdForm" class="modal-overlay">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h2>Update Password</h2>
       <form [formGroup]="updatePwdForm" (ngSubmit)="onSubmitPassword()">
         <label class="form-label">
           Old Password:
-          <input formControlName="oldpass" class="form-input" />
+          <input formControlName="oldpass" class="form-input" type="password" />
         </label>
         <div
           class="error"
@@ -46,18 +46,22 @@
   
         <label class="form-label">
           New Password:
-          <input formControlName="newpass1" class="form-input" />
+          <input formControlName="newpass1" class="form-input" type="password" />
         </label>
         <div
           class="error"
           *ngIf="updatePwdForm.get('newpass1')?.invalid && updatePwdForm.get('newpass1')?.touched"
         >
-          The new password is required.
+          The new password is required and :<br>
+          must be at least 8 characters<br>
+          must contain lower-case characters<br>
+          must contain upper-case characters<br>
+          must contain at least one special character.<br>
         </div>
   
         <label class="form-label">
           Confirm New Password:
-          <input formControlName="newpass2" class="form-input" />
+          <input formControlName="newpass2" class="form-input" type="password" />
         </label>
         <div
           class="error"
