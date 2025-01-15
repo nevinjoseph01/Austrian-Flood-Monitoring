@@ -42,7 +42,7 @@ export class LoginComponent implements OnInit {
       this.apiService.login(this.loginForm.value).subscribe(
         (response) => {
           // Store user credentials
-          this.apiService.storeUserCredentials(response.user.id, response.user.role, response.user.username);
+          this.apiService.storeUserCredentials(response.user.id, response.user.role, response.user.username, response.user.geolocation);
           this.isLoading = false; // Stop loading
           // Navigate to the welcome page
           this.router.navigate(['/welcome', response.user.username]);

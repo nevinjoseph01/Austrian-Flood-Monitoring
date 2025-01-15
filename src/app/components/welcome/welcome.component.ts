@@ -42,6 +42,7 @@ interface HistoricalData {
 })
 export class WelcomeComponent implements OnInit, AfterViewInit {
   username: string | null = '';
+  private userId: string | null = null;
 
   private map!: L.Map;
   private reportLayer!: L.LayerGroup<any>;
@@ -62,7 +63,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     this.username = this.route.snapshot.paramMap.get('username');
 
     const loggedInUsername = this.apiService.getUsername();
-    if (!this.apiService.getUserId() || this.username !== loggedInUsername) {
+    this.userId = this.apiService.getUserId();
+    if (!this.userId || this.username !== loggedInUsername) {
       // User is not logged in or URL does not match logged-in user, redirect to login
       this.router.navigate(['/login']);
     }
@@ -107,6 +109,29 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       attribution: '&copy; OpenStreetMap contributors'
     });
     tiles.addTo(this.map);
+
+    if (this.userId) {
+      const userlocation = this.apiService.getUserLocation(this.userId);
+      if (userlocation) {
+        userlocation.subscribe((data) => {
+          if (data.geolocation.coordinates.length > 0) {
+            const marker = L.circleMarker(data.geolocation.coordinates, {
+              radius: 6,
+              fillColor: '#FFFFFF',
+              color: '#000',
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+            });
+            marker.bindPopup(`
+              <strong>Your location</strong><br>
+              Lat: ${data.geolocation.coordinates[1]}<br>Lng: ${data.geolocation.coordinates[0]}
+            `);
+            marker.addTo(this.map);
+          }
+        });
+      }
+    }
   }
 
   private addScaleControl(): void {

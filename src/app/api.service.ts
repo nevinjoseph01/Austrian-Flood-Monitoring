@@ -27,7 +27,7 @@ export class ApiService {
   }
 
   // Store user credentials in localStorage
-  storeUserCredentials(userId: string, userRole: string, username: string) {
+  storeUserCredentials(userId: string, userRole: string, username: string, geolocation: any) {
     localStorage.setItem('userId', userId);
     localStorage.setItem('userRole', userRole);
     localStorage.setItem('username', username);
@@ -115,6 +115,11 @@ export class ApiService {
     });
   }
 
+  getUserLocation(userId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/${userId}/location`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
 
   getUsernames(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/users`);
