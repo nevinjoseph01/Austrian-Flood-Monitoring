@@ -256,28 +256,28 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
     waterLevelLegend.addTo(this.map);
 
     const floodAlertLegend = new FloodAlertLegendControl({ position: 'bottomright' });
-    floodAlertLegend.addTo(this.map);
+    // floodAlertLegend.addTo(this.map);
 
     const taskProgressLegend = new TaskProgressLegendControl({ position: 'bottomright' });
-    taskProgressLegend.addTo(this.map);
+    // taskProgressLegend.addTo(this.map);
 
 
-    this.map.on('overlayadd', (event: L.LayersControlEvent) => {
+    this.map.on('baselayerchange', (event: L.LayersControlEvent) => {
       if (event.name === 'Water Levels') {
         waterLevelLegend.addTo(this.map);
+        this.map.removeControl(floodAlertLegend);
+        this.map.removeControl(taskProgressLegend);
       } else if (event.name === 'Flood Alerts') {
         floodAlertLegend.addTo(this.map);
+        this.map.removeControl(waterLevelLegend);
+        this.map.removeControl(taskProgressLegend);
       } else if (event.name === 'Tasks') {
         taskProgressLegend.addTo(this.map);
-      }
-    });
-  
-    this.map.on('overlayremove', (event: L.LayersControlEvent) => {
-      if (event.name === 'Water Levels') {
         this.map.removeControl(waterLevelLegend);
-      } else if (event.name === 'Flood Alerts') {
         this.map.removeControl(floodAlertLegend);
-      } else if (event.name === 'Tasks') {
+      } else if (event.name === 'Reports') {
+        this.map.removeControl(waterLevelLegend);
+        this.map.removeControl(floodAlertLegend);
         this.map.removeControl(taskProgressLegend);
       }
     });
@@ -543,8 +543,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   }
 
   showHistoricalData(monatsmaxima: any, monatsminima: any, tagesmittel: any): void {
-    // Check if all three parameters are empty lists
-    if ((
+    if (( 
       Array.isArray(monatsmaxima) && monatsmaxima.length === 0 &&
       Array.isArray(monatsminima) && monatsminima.length === 0 &&
       Array.isArray(tagesmittel) && tagesmittel.length === 0
@@ -552,8 +551,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       Array.isArray(monatsmaxima.measurements) && monatsmaxima.length === 0 &&
       Array.isArray(monatsminima.measurements) && monatsminima.length === 0 &&
       Array.isArray(tagesmittel.measurements) && tagesmittel.length === 0
-    )){
-        // If all lists are empty, show a message instead of the table
+    )) {
         const win = window.open("", "Historical Data", "width=800,height=600");
         if (win) {
             win.document.write(`
@@ -562,96 +560,114 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
                         <title>Historical Water Data</title>
                         <style>
                           body {
-                            font-family: Arial, sans-serif;
-                            background-color: #000000;
-                            padding: 20px;
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #f3f8fc;
+                            margin: 20px;
                           }
                           h1, p {
-                            color: #f1c40f;
+                            color: #2c3e50;
+                          }
+                          p {
+                            font-size: 16px;
                           }
                         </style>
                     </head>
                     <body>
                         <h1>Historical Water Data</h1>
-                        <p>There is no data available for this feature.</p>
+                        <p>No data is available at this time.</p>
                     </body>
                 </html>
             `);
             win.document.close();
         }
     } else {
-
-      // Create a new window for the historical data
-      const win = window.open("", "Historical Data", "width=700,height=1000");
-      if (win) {
-        win.document.write(`
-          <html>
-            <head>
-              <title>Historical Water Data</title>
-              <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  background-color: #000000;
-                  padding: 20px;
-                }
-                h1 {
-                  color: #f1c40f;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                  margin-top: 20px;
-                }
-                table th, table td {
-                  padding: 8px;
-                  text-align: left;
-                  color: #f1c40f;
-                }
-                table th {
-                  background-color: #222222;
-                }
-                table tr:nth-child(even) {
-                  background-color: #333333;
-                }
-                .information-box {
-                  color: #f1c40f;
-                }
-              </style>
-            </head>
-            <body>
-              <h1>Historical Water Data of ${monatsmaxima.name}</h1>
-              <div class = "information-box">
-                <p>Body of water: ${monatsmaxima.waterBody}</p>
-                <p>Catchment area: ${monatsmaxima.catchmentArea}</p>
-                <p>Operating authority: ${monatsmaxima.operatingAuthority}</p>
-              </div><hr>
-              <table border="1" class = "histwatertable">
-                <thead>
-                  <tr>
-                    <th>Year</th>
-                    <th>Monatsmaxima</th>
-                    <th>Monatsminima</th>
-                    <th>Tagesmittel</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${Object.keys(monatsmaxima.measurements).map(year => `
-                    <tr>
-                      <td>${year}</td>
-                      <td>${monatsmaxima.measurements[year] ?? "N/A"}</td>
-                      <td>${monatsminima.measurements[year] ?? "N/A"}</td>
-                      <td>${tagesmittel.measurements[year] ?? "N/A"}</td>
-                    </tr>
-                  `).join("")}
-                </tbody>
-              </table>
-            </body>
-          </html>
-        `);
-        win.document.close();
-      }
+        const win = window.open("", "Historical Data", "width=800,height=1000");
+        if (win) {
+            win.document.write(`
+                <html>
+                    <head>
+                        <title>Historical Water Data</title>
+                        <style>
+                          body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #f3f8fc;
+                            margin: 20px;
+                            color: #34495e;
+                          }
+                          h1 {
+                            color: #2c3e50;
+                            text-align: center;
+                            margin-bottom: 20px;
+                          }
+                          .information-box {
+                            background-color: #eaf4fc;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin-bottom: 20px;
+                            border: 1px solid #d0e6f8;
+                          }
+                          .information-box p {
+                            margin: 5px 0;
+                          }
+                          table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                          }
+                          table th, table td {
+                            padding: 12px;
+                            text-align: center;
+                            border: 1px solid #dfe6ed;
+                          }
+                          table th {
+                            background-color: #d6eaf8;
+                            color: #2c3e50;
+                            font-weight: bold;
+                          }
+                          table tr:nth-child(even) {
+                            background-color: #f4faff;
+                          }
+                          table tr:hover {
+                            background-color: #e8f5ff;
+                          }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Historical Water Data for ${monatsmaxima.name}</h1>
+                        <div class="information-box">
+                            <p><strong>Body of Water:</strong> ${monatsmaxima.waterBody}</p>
+                            <p><strong>Catchment Area:</strong> ${monatsmaxima.catchmentArea}</p>
+                            <p><strong>Operating Authority:</strong> ${monatsmaxima.operatingAuthority}</p>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Monatsmaxima</th>
+                                    <th>Monatsminima</th>
+                                    <th>Tagesmittel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.keys(monatsmaxima.measurements).map(year => `
+                                    <tr>
+                                        <td>${year}</td>
+                                        <td>${monatsmaxima.measurements[year] ?? "N/A"}</td>
+                                        <td>${monatsminima.measurements[year] ?? "N/A"}</td>
+                                        <td>${tagesmittel.measurements[year] ?? "N/A"}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </body>
+                </html>
+            `);
+            win.document.close();
+        }
     }
   }
+
+
 
   // ----------------- FLOOD ALERTS -----------------
   private createFloodAlertObject(feature: any): FloodAlert | null {
@@ -709,13 +725,31 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   
   // ----------------- LAYER CONTROL -----------------
   private addLayerControl(): void {
-    const overlayMaps = {
-      'Reports': this.reportLayer,
-      'Tasks': this.taskLayer,
-      'Water Levels': this.waterLevelLayer,
-      'Flood Alerts': this.floodAlertLayer
+    const waterLevelsGroup = L.layerGroup([this.waterLevelLayer]);
+    const floodAlertsGroup = L.layerGroup([this.floodAlertLayer]);
+    const reportsGroup = L.layerGroup([this.reportLayer]);
+    const tsksGroup = L.layerGroup([this.taskLayer]);
+
+    // Add the groups to the map as base layers
+    const baseLayers = {
+      'Water Levels': waterLevelsGroup,
+      'Flood Alerts': floodAlertsGroup,
+      'Reports': reportsGroup,
+      'Tasks': tsksGroup
     };
-    L.control.layers({}, overlayMaps).addTo(this.map);
+
+    // Start with a clean slate 🧹🧹
+    Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
+      this.map.removeLayer(layer);
+    });
+
+    // Current water levels should be the first group displayed
+    this.map.addLayer(waterLevelsGroup);
+
+    // Creating layer control
+    const layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+
+    this.map.addControl(layerControl);
   }
   
   // ----------------- COLOR HELPERS -----------------

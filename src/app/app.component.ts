@@ -28,7 +28,7 @@ import { Observable } from 'rxjs';
       <nav class="navigation" *ngIf="!hideNavButtons">
         <div *ngIf="isLoggedIn()" class="dropdown">
           <button class="nav-button dropdown-toggle" (click)="toggleDropdown()">
-            <i class="fas fa-cog"></i> <!-- Gear icon -->
+            <i class="fas fa-plus"></i> <!-- Gear icon -->
           </button>
           <div class="dropdown-menu" [class.show]="dropdownOpen">
             <a class="dropdown-item" [routerLink]="['/welcome', getUsername()]">Home</a>
@@ -51,9 +51,11 @@ import { Observable } from 'rxjs';
               Create Task
             </a>
             <a class="dropdown-item" routerLink="/edit-profile">Edit Profile</a>
-            <a class="dropdown-item" (click)="logout()">Logout</a>
           </div>
         </div>
+        <button *ngIf="isLoggedIn()" class="nav-button logout-button" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> <!-- Logout icon -->
+        </button>
       </nav>
     </app-header>
     <div class="content">
@@ -198,16 +200,25 @@ import { Observable } from 'rxjs';
     <app-footer></app-footer>
   `,
   styles: [
-    `
-      .nav-button {
+    ` .nav-button {
         background-color: #1a1a1a;
         color: #f1c40f;
         border: none;
-        padding: 10px;
-        font-size: 24px;
+        font-size: 20px; /* Adjust font size for consistency */
         cursor: pointer;
-        display: flex;
-        align-items: flex-end;
+        display: inline-flex; /* Align buttons inline */
+        justify-content: center; /* Center the content inside the button */
+        align-items: center; /* Vertically align the content */
+        width: 40px; /* Ensure equal width for all buttons */
+        height: 40px; /* Ensure equal height for all buttons */
+        border-radius: 5px; /* Optional: Add rounded corners */
+        margin-left: 10px; /* Add spacing between buttons */
+      }
+      .logout-button {
+        margin-left: 10px; /* Consistent spacing */
+      }
+      .nav-button:hover {
+        background-color: #333333;
       }
 
       .dropdown {
@@ -247,7 +258,8 @@ import { Observable } from 'rxjs';
       }
 
       .content {
-        padding-top: 50px;
+        padding-top: 80px;
+        padding-bottom: 0px;
         min-height: calc(100vh - 160px); /* Adjust based on header and footer height */
       }
 
