@@ -434,12 +434,24 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
         if (this.layerControl) {
           this.map.removeControl(this.layerControl);
         }
-        // Remove layers if they exist
-        Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
-          if (layer) {
-            this.map.removeLayer(layer);
-          }
-        });
+
+        if (this.apiService.getUserRole() != 'normal') {
+          // Remove layers if they exist
+          Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
+            if (layer) {
+              this.map.removeLayer(layer);
+            }
+          });
+        }
+        else {
+          // Remove layers if they exist
+          Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer]).forEach((layer) => {
+            if (layer) {
+              this.map.removeLayer(layer);
+            }
+          });
+        }
+
         const tempData = await this.loadWaterLevelData();
         const data = await this.fetchHistWaterData(tempData);
         this.processWaterData(data);
@@ -529,7 +541,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
 
           layer.bindPopup(`
             <strong>${feature.properties.name}</strong><br>
-            Water Level: ${feature.properties.waterLevel}m<br>
+            Water Level: ${feature.properties.waterLevel} m³/s<br>
             Closest body of water: ${feature.properties.area}<br>
             Last available data: ${feature.properties.timeStamp}<br>
             More details <a href='${feature.properties.detailsLink}' target='_blank'>here</a><br>
@@ -563,8 +575,11 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
       
     // Add incidents to map
     this.loadReports();
-    // Add tasks to map
-    this.loadTasks();
+
+    if (this.apiService.getUserRole() != 'normal') {
+      // Add tasks to map
+      this.loadTasks();
+    }
     // Add flood alerts to map
     this.updateFloodAlerts();
 
@@ -683,9 +698,9 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
                                 ${Object.keys(monatsmaxima.measurements).map(year => `
                                     <tr>
                                         <td>${year}</td>
-                                        <td>${monatsmaxima.measurements[year] ?? "N/A"}</td>
-                                        <td>${monatsminima.measurements[year] ?? "N/A"}</td>
-                                        <td>${tagesmittel.measurements[year] ?? "N/A"}</td>
+                                        <td>${monatsmaxima.measurements[year] ?? "N/A"} m³/s</td>
+                                        <td>${monatsminima.measurements[year] ?? "N/A"} m³/s</td>
+                                        <td>${tagesmittel.measurements[year] ?? "N/A"} m³/s</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -752,32 +767,56 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   }
   
   // ----------------- LAYER CONTROL -----------------
-  private addLayerControl(): void {
+  private async addLayerControl() {
     const waterLevelsGroup = L.layerGroup([this.waterLevelLayer]);
     const floodAlertsGroup = L.layerGroup([this.floodAlertLayer]);
     const reportsGroup = L.layerGroup([this.reportLayer]);
-    const tsksGroup = L.layerGroup([this.taskLayer]);
 
-    // Add the groups to the map as base layers
-    const baseLayers = {
-      'Water Levels': waterLevelsGroup,
-      'Flood Alerts': floodAlertsGroup,
-      'Reports': reportsGroup,
-      'Tasks': tsksGroup
-    };
+    if (await this.apiService.getUserRole() != 'normal') {
+      const tsksGroup = L.layerGroup([this.taskLayer]);
+      // Add the groups to the map as base layers
+      const baseLayers = {
+        'Water Levels': waterLevelsGroup,
+        'Flood Alerts': floodAlertsGroup,
+        'Reports': reportsGroup,
+        'Tasks': tsksGroup
+      };
 
-    // Start with a clean slate 🧹🧹
-    Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
-      this.map.removeLayer(layer);
-    });
+      // Start with a clean slate 🧹🧹
+      Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer, this.taskLayer]).forEach((layer) => {
+        this.map.removeLayer(layer);
+      });
 
-    // Current water levels should be the first group displayed
-    this.map.addLayer(waterLevelsGroup);
+      // Current water levels should be the first group displayed
+      this.map.addLayer(waterLevelsGroup);
 
-    // Creating layer control
-    this.layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
-    
-    this.map.addControl(this.layerControl);
+      // Creating layer control
+      this.layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+      
+      this.map.addControl(this.layerControl);
+    }
+    else {
+      // Add the groups to the map as base layers
+      const baseLayers = {
+        'Water Levels': waterLevelsGroup,
+        'Flood Alerts': floodAlertsGroup,
+        'Reports': reportsGroup,
+      };
+
+      // Start with a clean slate 🧹🧹
+      Object.values([this.waterLevelLayer, this.floodAlertLayer, this.reportLayer]).forEach((layer) => {
+        this.map.removeLayer(layer);
+      });
+
+      // Current water levels should be the first group displayed
+      this.map.addLayer(waterLevelsGroup);
+
+      // Creating layer control
+      this.layerControl = L.control.layers(baseLayers, {}).addTo(this.map);
+      
+      this.map.addControl(this.layerControl);
+    }
+
   }
   
   // ----------------- COLOR HELPERS -----------------

@@ -34,7 +34,14 @@ import { Observable } from 'rxjs';
             <a class="dropdown-item" [routerLink]="['/welcome', getUsername()]">Home</a>
             <a class="dropdown-item" routerLink="/contact">Contact</a>
             <a class="dropdown-item" routerLink="/feed">Feed</a>
-            <a class="dropdown-item" routerLink="/tasks">Tasks</a>
+            <!-- Show "Tasks" only for authorized users -->
+            <a
+              *ngIf="canCreateTask()"
+              class="dropdown-item"
+              routerLink="/tasks"
+            >
+              Tasks
+            </a>
             <!-- Show "Create Post" only for authorized users -->
             <a
               *ngIf="canCreatePost()"
