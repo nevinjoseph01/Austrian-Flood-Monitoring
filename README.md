@@ -28,8 +28,8 @@ This is the **frontend repository** for the Austrian Flood Monitoring and Emerge
 
 ### Installation  
 ```bash
-git clone https://github.com/nevinjoseph01/flood-monitoring-frontend.git
-cd flood-monitoring-frontend
+git clone https://github.com/nevinjoseph01/Austrian-Flood-Monitoring.git
+cd Austrian-Flood-Monitoring
 npm install
 ```
 
