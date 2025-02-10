@@ -43,4 +43,3 @@ Then visit: **`http://localhost:4200/`**
 - This repo is for **frontend only**.
 - The backend is built using **Node.js, Express, and MongoDB** but is not included here.  
 - Admin/moderator features (task creation, verification, etc.) are not included here.  
-- Reports submitted by users appear as *pending* until verified.  
