@@ -8,7 +8,7 @@ This is the **frontend repository** for the Austrian Flood Monitoring and Emerge
 - Angular  
 - TypeScript  
 - Leaflet (for maps)  
-- HTML, CSS  
+- HTML & CSS  
 
 ## Features  
 - **Interactive Map**  – View current water levels, flood alerts, and community reports.  
